@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/opsgenie/opsgenie-go-sdk/alertsv2"
 	alerts "github.com/opsgenie/opsgenie-go-sdk/alertsv2"
 	ogcli "github.com/opsgenie/opsgenie-go-sdk/client"
 	"github.com/sensu/sensu-go/types"
@@ -56,6 +57,36 @@ func configureRootCommand() *cobra.Command {
 
 func eventKey(event *types.Event) string {
 	return fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name)
+}
+
+func eventPriority(event *types.Event) alertsv2.Priority {
+	if event.Entity.Annotations != nil {
+		m := make(map[string]string)
+		m = event.Entity.Annotations
+		switch m["opsgenie_priority"] {
+		case "P5":
+			return alerts.P5
+
+		case "P4":
+			return alerts.P4
+
+		case "P3":
+			return alerts.P3
+
+		case "P2":
+			return alerts.P2
+
+		case "P1":
+			return alerts.P1
+
+		default:
+			return alerts.P3
+
+		}
+	} else {
+		return alerts.P3
+	}
+
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -120,7 +151,7 @@ func manageIncident(event *types.Event) error {
 		Teams:       teams,
 		Entity:      event.Entity.Name,
 		Source:      "sensu",
-		Priority:    alerts.P3,
+		Priority:    eventPriority(event),
 	}
 
 	response, err := alertCli.Create(request)

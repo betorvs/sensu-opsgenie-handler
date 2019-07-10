@@ -82,6 +82,15 @@ Flags:
 
 **Note:** Make sure to set the `OPSGENIE_AUTHTOKEN` environment variable for sensitive credentials in production to prevent leaking into system process table. Please remember command arguments can be viewed by unprivileged users using commands such as `ps` or `top`. The `--auth` argument is provided as an override primarily for testing purposes. 
 
+### To use Opsgenie Priority
+
+Please add this annotations inside sensu-agent:
+```sh
+# /etc/sensu/agent.yml example
+annotations:
+  opsgenie_priority: "P1"
+```
+
 
 ## Contributing
 
