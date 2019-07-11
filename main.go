@@ -61,9 +61,7 @@ func eventKey(event *types.Event) string {
 
 func eventPriority(event *types.Event) alertsv2.Priority {
 	if event.Entity.Annotations != nil {
-		m := make(map[string]string)
-		m = event.Entity.Annotations
-		switch m["opsgenie_priority"] {
+		switch event.Entity.Annotations["opsgenie_priority"] {
 		case "P5":
 			return alerts.P5
 
