@@ -105,7 +105,7 @@
     "issued": 1542667666,
     "output": "example output",
     "state": "failing",
-    "status": 1,
+    "status": 0,
     "total_state_change": 0,
     "last_ok": 0,
     "occurrences": 1,
@@ -117,7 +117,9 @@
       "name": "check-nginx",
       "namespace": "default",
       "labels": null,
-      "annotations": null
+      "annotations": {
+        "opsgenie_priority": "P1"
+      }
     }
   }
 }

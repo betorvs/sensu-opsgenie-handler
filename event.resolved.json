@@ -59,15 +59,13 @@
       "name": "webserver01",
       "namespace": "default",
       "labels": null,
-      "annotations": {
-        "opsgenie_priority": "P2"
-      }
+      "annotations": null
     }
   },
   "check": {
     "check_hooks": null,
-    "duration": 1.903135228,
-    "executed": 1522100915,
+    "duration": 1.803135228,
+    "executed": 1522101015,
     "high_flap_threshold": 0,
     "history": [
       {
@@ -105,7 +103,7 @@
     "issued": 1542667666,
     "output": "example output",
     "state": "failing",
-    "status": 1,
+    "status": 0,
     "total_state_change": 0,
     "last_ok": 0,
     "occurrences": 1,

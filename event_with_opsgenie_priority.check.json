@@ -117,7 +117,9 @@
       "name": "check-nginx",
       "namespace": "default",
       "labels": null,
-      "annotations": null
+      "annotations": {
+        "opsgenie_priority": "P1"
+      }
     }
   }
 }
