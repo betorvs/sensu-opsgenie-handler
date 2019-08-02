@@ -91,6 +91,28 @@ annotations:
   opsgenie_priority: "P1"
 ```
 
+Or inside check:
+```sh
+{
+  "type": "CheckConfig",
+  "api_version": "core/v2",
+  "metadata": {
+    "name": "interval_check",
+    "namespace": "default",
+    "annotations": {
+        "opsgenie_priority": "P2"
+    }
+  },
+  "spec": {
+    "command": "check-cpu.sh -w 75 -c 90",
+    "subscriptions": ["system"],
+    "handlers": ["opsgenie"],
+    "interval": 60,
+    "publish": true
+  }
+}
+```
+
 
 ## Contributing
 

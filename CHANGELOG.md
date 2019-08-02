@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.0.3] - 2019-08-02
+
+### Added
+- Add OpsGenie Priority as annotations inside check annotations.
+- Add Get, Close and Add Note functions to manage alerts already open. 
+
 ## [0.0.2] - 2019-07-10
 
 ### Added
