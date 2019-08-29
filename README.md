@@ -113,6 +113,14 @@ Or inside check:
 }
 ```
 
+### Asset creation
+
+Example: 
+
+```sh
+sensuctl asset create sensu-opsgenie-handler --url "https://assets.bonsai.sensu.io/fba8c41f2b5bc817f8fb201144627042a3e31ee3/sensu-opsgenie-handler_0.0.4_linux_amd64.tar.gz" --sha512 "5eda4b31371fae83860604dedbf8527d0d6919bfae8e4f5b33f71bd314f6d706ef80356b14f11d7d2f86923df722338a3d11b84fa1e35323959120b46b738487"
+```
+
 
 ## Contributing
 
