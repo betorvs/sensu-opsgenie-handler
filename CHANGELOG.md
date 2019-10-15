@@ -9,6 +9,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Added
 - Add `OPSGENIE_APIURL` to change OpsGenie API URL
+- Updated Gopkg.lock file.
+- Changed travis go version.
 
 ## [0.0.4] - 2019-08-26
 
