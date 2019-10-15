@@ -21,6 +21,7 @@ const (
 var (
 	authToken string
 	team      string
+	apiURL    string
 	stdin     *os.File
 )
 
@@ -56,6 +57,12 @@ func configureRootCommand() *cobra.Command {
 		"t",
 		os.Getenv("OPSGENIE_TEAM"),
 		"The OpsGenie V2 API Team, use default from OPSGENIE_TEAM env var")
+
+	cmd.Flags().StringVarP(&apiURL,
+		"url",
+		"u",
+		os.Getenv("OPSGENIE_APIURL"),
+		"The OpsGenie V2 API URL, use default from OPSGENIE_APIURL env var")
 
 	return cmd
 }
@@ -135,6 +142,10 @@ func run(cmd *cobra.Command, args []string) error {
 
 	}
 
+	if apiURL == "" {
+		apiURL = "https://api.opsgenie.com"
+	}
+
 	if stdin == nil {
 		stdin = os.Stdin
 	}
@@ -158,29 +169,30 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("event does not contain check")
 	}
 
+	// starting client instance
+	cli := new(ogcli.OpsGenieClient)
+	cli.SetAPIKey(authToken)
+	cli.SetOpsGenieAPIUrl(apiURL)
+	alertCli, _ := cli.AlertV2()
+
 	// check if event has a alert
-	hasAlert, _ := getAlert(event)
+	hasAlert, _ := getAlert(alertCli, event)
 	// fmt.Printf("Has Alert: %s \n", hasAlert)
 	if hasAlert == notFound && event.Check.Status != 0 {
-		return createIncident(event)
+		return createIncident(alertCli, event)
 	}
 
 	if hasAlert != notFound && event.Check.Status == 0 {
-		return closeAlert(event, hasAlert)
+		return closeAlert(alertCli, event, hasAlert)
 	}
 	if event.Check.Status != 0 {
-		return addNote(event, hasAlert)
+		return addNote(alertCli, event, hasAlert)
 	}
 	return nil
 }
 
 // createIncident func create an alert in OpsGenie
-func createIncident(event *types.Event) error {
-
-	cli := new(ogcli.OpsGenieClient)
-	cli.SetAPIKey(authToken)
-
-	alertCli, _ := cli.AlertV2()
+func createIncident(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event) error {
 
 	teams := []alerts.TeamRecipient{
 		&alerts.Team{Name: team},
@@ -206,12 +218,7 @@ func createIncident(event *types.Event) error {
 }
 
 // getAlert func get a alert using an alias.
-func getAlert(event *types.Event) (string, error) {
-
-	cli := new(ogcli.OpsGenieClient)
-	cli.SetAPIKey(authToken)
-
-	alertCli, _ := cli.AlertV2()
+func getAlert(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event) (string, error) {
 
 	response, err := alertCli.Get(alerts.GetAlertRequest{
 		Identifier: &alerts.Identifier{
@@ -223,16 +230,12 @@ func getAlert(event *types.Event) (string, error) {
 		return notFound, nil
 	}
 	alert := response.Alert
-	fmt.Printf("ID: %s, Message: %s ,Count: %d \n", alert.ID, alert.Message, alert.Count)
+	fmt.Printf("ID: %s, Message: %s, Count: %d \n", alert.ID, alert.Message, alert.Count)
 	return alert.ID, nil
 }
 
 // closeAlert func close an alert if status == 0
-func closeAlert(event *types.Event, alertid string) error {
-	cli := new(ogcli.OpsGenieClient)
-	cli.SetAPIKey(authToken)
-
-	alertCli, _ := cli.AlertV2()
+func closeAlert(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event, alertid string) error {
 
 	identifier := alerts.Identifier{
 		ID: alertid,
@@ -254,11 +257,7 @@ func closeAlert(event *types.Event, alertid string) error {
 }
 
 // addNode func add a note inside an alert if status != 0
-func addNote(event *types.Event, alertid string) error {
-	cli := new(ogcli.OpsGenieClient)
-	cli.SetAPIKey(authToken)
-
-	alertCli, _ := cli.AlertV2()
+func addNote(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event, alertid string) error {
 
 	note := fmt.Sprintf("Last Check Status: %s, Output: %s", event.Check.State, event.Check.Output)
 

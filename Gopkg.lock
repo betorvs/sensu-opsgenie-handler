@@ -10,25 +10,23 @@
   version = "v2.6"
 
 [[projects]]
-  digest = "1:52c395c0928cc0bdc702c212704103fde073b78e090d2bf1f71d220bd2a6c7a5"
+  digest = "1:6f64c897e2e6c064afd5f4b4842aafea5cfd823ad93513a8df744e245d379232"
   name = "github.com/coreos/etcd"
   packages = [
-    "auth/authpb",
     "etcdserver/etcdserverpb",
-    "mvcc/mvccpb",
     "version",
   ]
   pruneopts = "UT"
-  revision = "98d308426819d892e149fe45f6fd542464cb1f9d"
-  version = "v3.3.13"
+  revision = "bbe86b066c0c714fa2a17ee93a37882553cf2394"
+  version = "v3.4.2"
 
 [[projects]]
-  digest = "1:0ef770954bca104ee99b3b6b7f9b240605ac03517d9f98cbc1893daa03f3c038"
+  digest = "1:05ffeeed3f0f05520de0679f6aa3219ffee69cfd6d9fb6c194879d4c818ad670"
   name = "github.com/coreos/go-semver"
   packages = ["semver"]
   pruneopts = "UT"
-  revision = "8ab6407b697782a06568d4b7f1db25550ec2e4c6"
-  version = "v0.2.0"
+  revision = "e214231b295a8ea9479f11b70b35d5acf3556d9b"
+  version = "v0.3.0"
 
 [[projects]]
   digest = "1:76dc72490af7174349349838f2fe118996381b31ea83243812a97e5a0fd5ed55"
@@ -55,7 +53,7 @@
   revision = "bcd34c9993f899273c74baaa95e15386cd97b6e7"
 
 [[projects]]
-  digest = "1:4652941215f23c7ad6546bab86964c72248a1134baa53f0df618661344ba5cac"
+  digest = "1:e20a9d6598878d629e04541d96076bf232c1ee36f6b267c4a5dae7779f15c36a"
   name = "github.com/gogo/protobuf"
   packages = [
     "gogoproto",
@@ -63,8 +61,8 @@
     "protoc-gen-gogo/descriptor",
   ]
   pruneopts = "UT"
-  revision = "ba06b47c162d49f2af050fb4c75bcbc86a159d5c"
-  version = "v1.2.1"
+  revision = "5628607bb4c51c3157aacc3a50f0ab707582b805"
+  version = "v1.3.1"
 
 [[projects]]
   digest = "1:f5ce1529abc1204444ec73779f44f94e2fa8fcdb7aca3c355b0c95947e4005c6"
@@ -89,6 +87,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:88e0b0baeb9072f0a4afbcf12dda615fc8be001d1802357538591155998da21b"
+  name = "github.com/hashicorp/go-version"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ac23dc3fea5d1a983c43f6a0f6e2c13f0195d8bd"
+  version = "v1.2.0"
+
+[[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
@@ -97,11 +103,12 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:f5a2051c55d05548d2d4fd23d244027b59fbd943217df8aa3b5e170ac2fd6e1b"
+  digest = "1:709cd2a2c29cc9b89732f6c24846bbb9d6270f28ef5ef2128cc73bd0d6d7bff9"
   name = "github.com/json-iterator/go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "v1.1.6"
+  revision = "27518f6661eba504be5a7a9a9f6d9460d892ade3"
+  version = "v1.1.7"
 
 [[projects]]
   digest = "1:31e761d97c76151dde79e9d28964a812c46efc5baee4085b86f68f0c654450de"
@@ -171,14 +178,15 @@
   revision = "15f95af6e78dcd2030d8195a138bd88d4f403546"
 
 [[projects]]
-  digest = "1:bffc9efe1d7783f54cb0003b57cb3c8fe49f56beb9859cf122be97504e854666"
+  digest = "1:b778880d47d8544b11cd82b0d9731f9669d653489b400d0b5899b8a20934e7b4"
   name = "github.com/robfig/cron"
   packages = ["."]
   pruneopts = "UT"
-  revision = "2315d5715e36303a941d907f038da7f7c44c773b"
+  revision = "45fbe1491cdd47d74d1bf1396286d67faee8b8b5"
+  version = "v3.0.0"
 
 [[projects]]
-  digest = "1:4377aae26204896407b4cb612111f72625e63725c5ba467b6a284e8fe029a87d"
+  digest = "1:ade23e5eaed3c44ec2b90a1990b7f6dc5e9f7bc0ff2e2cd32fce0ba10fa804a8"
   name = "github.com/sensu/sensu-go"
   packages = [
     "api/core/v2",
@@ -187,8 +195,8 @@
     "util/strings",
   ]
   pruneopts = "UT"
-  revision = "b2f432747653965c48ea806ee4852cd4916be22f"
-  version = "v5.10.1"
+  revision = "49220cba066b31908b91b5bad8d8b90177769d0f"
+  version = "v5.14.0"
 
 [[projects]]
   digest = "1:04457f9f6f3ffc5fea48e71d62f2ca256637dee0a04d710288e27e05c8b41976"
@@ -207,35 +215,47 @@
   version = "v0.0.5"
 
 [[projects]]
-  digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
+  digest = "1:524b71991fc7d9246cc7dc2d9e0886ccb97648091c63e30eef619e6862c955dd"
   name = "github.com/spf13/pflag"
   packages = ["."]
   pruneopts = "UT"
-  revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
-  version = "v1.0.3"
+  revision = "2e9d26c8c37aae03e3f9d4e90b7116f5accb7cab"
+  version = "v1.0.5"
 
 [[projects]]
-  digest = "1:b8a8f8eb0e7855e11cc3ba2b7aa2c05ac379eb1634c02f838738465a517ac0c7"
+  digest = "1:f430713511ffcff67359ebbe7fe4c0bf81a5dcc79bcaa111f092ace3bcbed706"
+  name = "go.etcd.io/etcd"
+  packages = [
+    "auth/authpb",
+    "mvcc/mvccpb",
+  ]
+  pruneopts = "UT"
+  revision = "bbe86b066c0c714fa2a17ee93a37882553cf2394"
+  version = "v3.4.2"
+
+[[projects]]
+  branch = "master"
+  digest = "1:c124e945335a9c62ede3a565f3198c5ae9a5ecc39fddd85871138362d128fb74"
   name = "golang.org/x/net"
   packages = [
     "context",
+    "http/httpguts",
     "http2",
     "http2/hpack",
     "idna",
     "internal/timeseries",
-    "lex/httplex",
     "trace",
   ]
   pruneopts = "UT"
-  revision = "66aacef3dd8a676686c7ae3716979581e8b03c47"
+  revision = "da9a3fd4c5820e74b24a6cb7fb438dc9b0dd377c"
 
 [[projects]]
   branch = "master"
-  digest = "1:730ba27cd66db3b98ec8f51a6f20d45ec277d490cca36b1f54e31d3fcaf4840e"
+  digest = "1:7c927f17d868be652a4cfe7de23e4292dea5b14d974a1d536e3b7cb7e79fd695"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "04f50cda93cbb67f2afa353c52f342100e80e625"
+  revision = "b09406accb4736d857a32bf9444cd7edae2ffa79"
 
 [[projects]]
   digest = "1:8d8faad6b12a3a4c819a3f9618cb6ee1fa1cfc33253abeeea8b55336721e3405"
@@ -268,33 +288,49 @@
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "UT"
-  revision = "3bdd9d9f5532d75d09efb230bd767d265245cfe5"
+  revision = "548a555dbc03994223efbaba0090152849259498"
 
 [[projects]]
-  digest = "1:c91f531431e38fdb3172acc315845998993e55bbeb5bcf726ff3922fd1c98ddd"
+  digest = "1:6cd77d0b616d2dcebd363dfecba593f27b0151fc82cdb5fbfb96c5a7cfbc95b5"
   name = "google.golang.org/grpc"
   packages = [
     ".",
     "balancer",
+    "balancer/base",
+    "balancer/roundrobin",
+    "binarylog/grpc_binarylog_v1",
     "codes",
     "connectivity",
     "credentials",
-    "grpclb/grpc_lb_v1/messages",
+    "credentials/internal",
+    "encoding",
+    "encoding/proto",
     "grpclog",
     "internal",
+    "internal/backoff",
+    "internal/balancerload",
+    "internal/binarylog",
+    "internal/channelz",
+    "internal/envconfig",
+    "internal/grpcrand",
+    "internal/grpcsync",
+    "internal/syscall",
+    "internal/transport",
     "keepalive",
     "metadata",
     "naming",
     "peer",
     "resolver",
+    "resolver/dns",
+    "resolver/passthrough",
+    "serviceconfig",
     "stats",
     "status",
     "tap",
-    "transport",
   ]
   pruneopts = "UT"
-  revision = "5b3c4e850e90a4cf6a20ebd46c8b32a0a3afcb9e"
-  version = "v1.7.5"
+  revision = "f6d0f9ee430895e87ef1ceb5ac8f39725bafceef"
+  version = "v1.24.0"
 
 [[projects]]
   digest = "1:9935525a8c49b8434a0b0a54e1980e94a6fae73aaff45c5d33ba8dff69de123e"
