@@ -83,6 +83,8 @@ Flags:
 
 **Note:** Make sure to set the `OPSGENIE_AUTHTOKEN` environment variable for sensitive credentials in production to prevent leaking into system process table. Please remember command arguments can be viewed by unprivileged users using commands such as `ps` or `top`. The `--auth` argument is provided as an override primarily for testing purposes. 
 
+To configure OpsGenie Sensu Integration follow these first part in [OpsGenie Docs][5].
+
 ### To use Opsgenie Priority
 
 Please add this annotations inside sensu-agent:
@@ -139,4 +141,5 @@ See https://github.com/sensu/sensu-go/blob/master/CONTRIBUTING.md
 [2]: https://www.opsgenie.com/ 
 [3]: https://docs.sensu.io/sensu-go/5.0/reference/handlers/#how-do-sensu-handlers-work
 [4]: https://github.com/betorvs/sensu-opsgenie-handler/releases
+[5]: https://docs.opsgenie.com/docs/sensu-integration#section-add-sensu-integration-in-opsgenie
 
