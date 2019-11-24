@@ -78,9 +78,10 @@ Usage:
   sensu-opsgenie-handler [flags]
 
 Flags:
-  -a, --auth string   The OpsGenie V2 API authentication token, use default from OPSGENIE_AUTHTOKEN env var
-  -h, --help          help for sensu-opsgenie-handler
-  -t, --team string   The OpsGenie V2 API Team, use default from OPSGENIE_TEAM env var
+  -a, --auth string             The OpsGenie V2 API authentication token, use default from OPSGENIE_AUTHTOKEN env var
+  -h, --help                    help for sensu-opsgenie-handler
+  -t, --team string             The OpsGenie V2 API Team, use default from OPSGENIE_TEAM env var
+  -w, --withAnnotations string  To parse any annotation to send to OpsGenie inside message field. Use                                                OPSGENIE_ANNOTATIONS env var. Split them using comma (,).
 
 ```
 
@@ -106,7 +107,8 @@ Or inside check:
     "name": "interval_check",
     "namespace": "default",
     "annotations": {
-        "opsgenie_priority": "P2"
+        "opsgenie_priority": "P2",
+        "documentation": "https://docs.sensu.io/sensu-go/latest"
     }
   },
   "spec": {
@@ -118,6 +120,11 @@ Or inside check:
   }
 }
 ```
+
+### To parse any annotation
+
+With this new feature you can include any annotation field in message to show inside OpsGenie alert. By default they will look for documentation and playbook. 
+
 
 ### Asset creation
 
