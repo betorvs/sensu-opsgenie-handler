@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/opsgenie/opsgenie-go-sdk/alertsv2"
 	alerts "github.com/opsgenie/opsgenie-go-sdk/alertsv2"
@@ -19,10 +20,11 @@ const (
 )
 
 var (
-	authToken string
-	team      string
-	apiURL    string
-	stdin     *os.File
+	authToken   string
+	team        string
+	apiURL      string
+	annotations string
+	stdin       *os.File
 )
 
 func main() {
@@ -63,6 +65,12 @@ func configureRootCommand() *cobra.Command {
 		"u",
 		os.Getenv("OPSGENIE_APIURL"),
 		"The OpsGenie V2 API URL, use default from OPSGENIE_APIURL env var")
+
+	cmd.Flags().StringVarP(&annotations,
+		"withAnnotations",
+		"w",
+		os.Getenv("OPSGENIE_ANNOTATIONS"),
+		"The OpsGenie Handler will parse check and entity annotations with these values. Use OPSGENIE_ANNOTATIONS env var with commas, like: documentation,playbook")
 
 	return cmd
 }
@@ -123,6 +131,40 @@ func eventPriority(event *types.Event) alertsv2.Priority {
 
 }
 
+// stringInSlice checks if a slice contains a specific string
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+// parseAnnotations func try to find a predeterminated keys
+func parseAnnotations(event *types.Event) string {
+	var output string
+	// localannotations := make(map[string]string)
+	tags := strings.Split(annotations, ",")
+	if event.Check.Annotations != nil {
+		for key, value := range event.Check.Annotations {
+			if stringInSlice(key, tags) {
+				output += fmt.Sprintf("%s: %s \n", key, value)
+			}
+		}
+	}
+	if event.Entity.Annotations != nil {
+		for key, value := range event.Check.Annotations {
+			if stringInSlice(key, tags) {
+				output += fmt.Sprintf("%s: %s \n", key, value)
+			}
+		}
+	}
+	output += fmt.Sprintf("check output: %s", event.Check.Output)
+
+	return output
+}
+
 // run func do everything
 func run(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
@@ -144,6 +186,10 @@ func run(cmd *cobra.Command, args []string) error {
 
 	if apiURL == "" {
 		apiURL = "https://api.opsgenie.com"
+	}
+
+	if annotations == "" {
+		annotations = "documentation,playbook"
 	}
 
 	if stdin == nil {
@@ -201,7 +247,7 @@ func createIncident(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event) e
 	request := alerts.CreateAlertRequest{
 		Message:     eventKey(event),
 		Alias:       eventKey(event),
-		Description: event.Check.Output,
+		Description: parseAnnotations(event),
 		Teams:       teams,
 		Entity:      event.Entity.Name,
 		Source:      source,

@@ -1,9 +1,12 @@
 # Sensu Go OpsGenie Handler
 TravisCI: [![TravisCI Build Status](https://travis-ci.org/betorvs/sensu-opsgenie-handler.svg?branch=master)](https://travis-ci.org/betorvs/sensu-opsgenie-handler)
+[![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/betorvs/sensu-opsgenie-handler)
 
 The Sensu Go OpsGenie Handler is a [Sensu Event Handler][3] which manages
 [OpsGenie][2] incidents, for alerting operators. With this handler,
 [Sensu][1] can trigger OpsGenie incidents.
+
+This handler was inspired by [pagerduty plugin][6].
 
 ## Installation
 
@@ -142,4 +145,4 @@ See https://github.com/sensu/sensu-go/blob/master/CONTRIBUTING.md
 [3]: https://docs.sensu.io/sensu-go/5.0/reference/handlers/#how-do-sensu-handlers-work
 [4]: https://github.com/betorvs/sensu-opsgenie-handler/releases
 [5]: https://docs.opsgenie.com/docs/sensu-integration#section-add-sensu-integration-in-opsgenie
-
+[6]: https://github.com/sensu/sensu-pagerduty-handler
