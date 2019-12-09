@@ -218,7 +218,7 @@ func run(cmd *cobra.Command, args []string) error {
 	// starting client instance
 	cli := new(ogcli.OpsGenieClient)
 	cli.SetAPIKey(authToken)
-	cli.SetOpsGenieAPIUrl(apiURL)
+	cli.SetOpsGenieAPIUrl(strings.TrimSuffix(apiURL, "/"))
 	alertCli, _ := cli.AlertV2()
 
 	// check if event has a alert
