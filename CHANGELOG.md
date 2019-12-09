@@ -9,7 +9,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Added
 - Correct issue [#6](https://github.com/betorvs/sensu-opsgenie-handler/issues/6): `trim additional ending slash in --url argument`
-
+- add script test.all.events.sh
 
 ## [0.0.6] - 2019-11-24
 
