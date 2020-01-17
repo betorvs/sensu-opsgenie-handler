@@ -10,6 +10,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Changed
 - change from dep to go mod
 - gometalinter to golangci-lint
+- correct goreleaser
 
 ## [0.0.7] - 2019-12-09
 
