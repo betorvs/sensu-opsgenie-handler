@@ -239,6 +239,10 @@ func run(cmd *cobra.Command, args []string) error {
 
 // createIncident func create an alert in OpsGenie
 func createIncident(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event) error {
+	note, err := getNote(event)
+	if err != nil {
+		return err
+	}
 
 	teams := []alerts.TeamRecipient{
 		&alerts.Team{Name: team},
@@ -252,6 +256,7 @@ func createIncident(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event) e
 		Entity:      event.Entity.Name,
 		Source:      source,
 		Priority:    eventPriority(event),
+		Note:        note,
 	}
 
 	response, err := alertCli.Create(request)
@@ -322,4 +327,12 @@ func addNote(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event, alertid 
 	}
 	fmt.Println("RequestID: " + response.RequestID)
 	return nil
+}
+
+func getNote(event *types.Event) (string, error) {
+	eventJSON, err := json.Marshal(event)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("Event data update:\n\n%s", eventJSON), nil
 }
