@@ -7,8 +7,13 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+
+
+## [0.0.9] - 2020-02-08
+
 ### Added
 - Added the Sensu event json dump to the OpsGenie `Note` field.
+- Added more tests
 
 ## [0.0.8] - 2020-01-20
 

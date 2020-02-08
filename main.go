@@ -144,7 +144,9 @@ func stringInSlice(a string, list []string) bool {
 // parseAnnotations func try to find a predeterminated keys
 func parseAnnotations(event *types.Event) string {
 	var output string
-	// localannotations := make(map[string]string)
+	if annotations == "" {
+		annotations = "documentation,playbook"
+	}
 	tags := strings.Split(annotations, ",")
 	if event.Check.Annotations != nil {
 		for key, value := range event.Check.Annotations {
@@ -154,14 +156,13 @@ func parseAnnotations(event *types.Event) string {
 		}
 	}
 	if event.Entity.Annotations != nil {
-		for key, value := range event.Check.Annotations {
+		for key, value := range event.Entity.Annotations {
 			if stringInSlice(key, tags) {
 				output += fmt.Sprintf("%s: %s \n", key, value)
 			}
 		}
 	}
 	output += fmt.Sprintf("check output: %s", event.Check.Output)
-
 	return output
 }
 
@@ -186,10 +187,6 @@ func run(cmd *cobra.Command, args []string) error {
 
 	if apiURL == "" {
 		apiURL = "https://api.opsgenie.com"
-	}
-
-	if annotations == "" {
-		annotations = "documentation,playbook"
 	}
 
 	if stdin == nil {
