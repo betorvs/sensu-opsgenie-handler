@@ -7,6 +7,11 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.0.10] - 2020-02-23
+
+### Added
+- Parse Entity.Name, Check.Name, Entity.Namespace, Entity.Class as tags to Opsgenie
+- Add OPSGENIE_SENSU_DASHBOARD variable to add new field in Description with "source: Sensu Dashboard URL"
 
 
 ## [0.0.9] - 2020-02-08

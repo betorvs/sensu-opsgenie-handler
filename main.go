@@ -20,11 +20,12 @@ const (
 )
 
 var (
-	authToken   string
-	team        string
-	apiURL      string
-	annotations string
-	stdin       *os.File
+	authToken      string
+	team           string
+	apiURL         string
+	annotations    string
+	sensuDashboard string
+	stdin          *os.File
 )
 
 func main() {
@@ -72,12 +73,23 @@ func configureRootCommand() *cobra.Command {
 		os.Getenv("OPSGENIE_ANNOTATIONS"),
 		"The OpsGenie Handler will parse check and entity annotations with these values. Use OPSGENIE_ANNOTATIONS env var with commas, like: documentation,playbook")
 
+	cmd.Flags().StringVar(&sensuDashboard,
+		"sensuDashboard",
+		os.Getenv("OPSGENIE_SENSU_DASHBOARD"),
+		"The OpsGenie Handler will use it to create a source Sensu Dashboard URL. Use OPSGENIE_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n")
+
 	return cmd
 }
 
 // eventKey func return Entity.Name/Check.Name to use in message and alias
 func eventKey(event *types.Event) string {
 	return fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name)
+}
+
+// eventTags func return Entity.Name Check.Name Entity.Namespace, event.Entity.EntityClass to use as tags in Opsgenie
+func eventTags(event *types.Event) (tags []string) {
+	tags = append(tags, event.Entity.Name, event.Check.Name, event.Entity.Namespace, event.Entity.EntityClass)
+	return tags
 }
 
 // eventPriority func read priority in the event and return alerts.PX
@@ -162,6 +174,9 @@ func parseAnnotations(event *types.Event) string {
 			}
 		}
 	}
+	if sensuDashboard != "disabled" {
+		output += fmt.Sprintf("source: %s/%s/events/%s/%s \n", sensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
+	}
 	output += fmt.Sprintf("check output: %s", event.Check.Output)
 	return output
 }
@@ -187,6 +202,10 @@ func run(cmd *cobra.Command, args []string) error {
 
 	if apiURL == "" {
 		apiURL = "https://api.opsgenie.com"
+	}
+
+	if sensuDashboard == "" {
+		sensuDashboard = "disabled"
 	}
 
 	if stdin == nil {
@@ -244,16 +263,18 @@ func createIncident(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event) e
 	teams := []alerts.TeamRecipient{
 		&alerts.Team{Name: team},
 	}
+	title := eventKey(event)
 
 	request := alerts.CreateAlertRequest{
-		Message:     eventKey(event),
-		Alias:       eventKey(event),
+		Message:     title,
+		Alias:       title,
 		Description: parseAnnotations(event),
 		Teams:       teams,
 		Entity:      event.Entity.Name,
 		Source:      source,
 		Priority:    eventPriority(event),
 		Note:        note,
+		Tags:        eventTags(event),
 	}
 
 	response, err := alertCli.Create(request)
