@@ -82,6 +82,7 @@ Flags:
   -h, --help                    help for sensu-opsgenie-handler
   -t, --team string             The OpsGenie V2 API Team, use default from OPSGENIE_TEAM env var
   -w, --withAnnotations string  To parse any annotation to send to OpsGenie inside message field. Use                                                OPSGENIE_ANNOTATIONS env var. Split them using comma (,).
+  --sensuDashboard              Sensu Dashboard URL like: http://sensu-dashboard.example.local/c/~/n", use OPSGENIE_SENSU_DASHBOARD env var.
 
 ```
 
