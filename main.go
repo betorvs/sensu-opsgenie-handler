@@ -81,16 +81,16 @@ func configureRootCommand() *cobra.Command {
 	return cmd
 }
 
-// eventKey func return Entity.Name/Check.Name to use in message and alias
-func eventKey(event *types.Event) string {
-	return fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name)
-}
+// // eventKey func return Entity.Name/Check.Name to use in message and alias
+// func eventKey(event *types.Event) string {
+// 	return fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name)
+// }
 
-// eventTags func return Entity.Name Check.Name Entity.Namespace, event.Entity.EntityClass to use as tags in Opsgenie
-func eventTags(event *types.Event) (tags []string) {
-	tags = append(tags, event.Entity.Name, event.Check.Name, event.Entity.Namespace, event.Entity.EntityClass)
-	return tags
-}
+// // eventTags func return Entity.Name Check.Name Entity.Namespace, event.Entity.EntityClass to use as tags in Opsgenie
+// func eventTags(event *types.Event) (tags []string) {
+// 	tags = append(tags, event.Entity.Name, event.Check.Name, event.Entity.Namespace, event.Entity.EntityClass)
+// 	return tags
+// }
 
 // parseEventKeyTags func return string and []string with event data
 // string contains Entity.Name/Check.Name to use in message and alias
@@ -297,10 +297,10 @@ func createIncident(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event) e
 
 // getAlert func get a alert using an alias.
 func getAlert(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event) (string, error) {
-
+	title, _ := parseEventKeyTags(event)
 	response, err := alertCli.Get(alerts.GetAlertRequest{
 		Identifier: &alerts.Identifier{
-			Alias: eventKey(event),
+			Alias: title,
 		},
 	})
 
