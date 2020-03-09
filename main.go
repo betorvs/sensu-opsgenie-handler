@@ -92,6 +92,15 @@ func eventTags(event *types.Event) (tags []string) {
 	return tags
 }
 
+// parseEventKeyTags func return string and []string with event data
+// string contains Entity.Name/Check.Name to use in message and alias
+// []string contains Entity.Name Check.Name Entity.Namespace, event.Entity.EntityClass to use as tags in Opsgenie
+func parseEventKeyTags(event *types.Event) (title string, tags []string) {
+	title = fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name)
+	tags = append(tags, event.Entity.Name, event.Check.Name, event.Entity.Namespace, event.Entity.EntityClass)
+	return title, tags
+}
+
 // eventPriority func read priority in the event and return alerts.PX
 // check.Annotations override Entity.Annotations
 func eventPriority(event *types.Event) alertsv2.Priority {
@@ -263,7 +272,7 @@ func createIncident(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event) e
 	teams := []alerts.TeamRecipient{
 		&alerts.Team{Name: team},
 	}
-	title := eventKey(event)
+	title, tags := parseEventKeyTags(event)
 
 	request := alerts.CreateAlertRequest{
 		Message:     title,
@@ -274,7 +283,7 @@ func createIncident(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event) e
 		Source:      source,
 		Priority:    eventPriority(event),
 		Note:        note,
-		Tags:        eventTags(event),
+		Tags:        tags,
 	}
 
 	response, err := alertCli.Create(request)
@@ -347,6 +356,7 @@ func addNote(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event, alertid 
 	return nil
 }
 
+// getNote func creates a note with whole event in json format
 func getNote(event *types.Event) (string, error) {
 	eventJSON, err := json.Marshal(event)
 	if err != nil {

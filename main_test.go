@@ -20,6 +20,15 @@ func TestGetNote(t *testing.T) {
 	assert.Contains(t, note, string(eventJSON))
 }
 
+func TestParseEventKeyTags(t *testing.T) {
+	event := types.FixtureEvent("foo", "bar")
+	_, err := json.Marshal(event)
+	assert.NoError(t, err)
+	title, tags := parseEventKeyTags(event)
+	assert.Contains(t, title, "foo")
+	assert.Contains(t, tags, "foo")
+}
+
 func TestParseAnnotations(t *testing.T) {
 	event := v2.Event{
 		Entity: &v2.Entity{
