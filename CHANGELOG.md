@@ -16,7 +16,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 - Removed addNote func
 - Removed eventKey func
 - Removed eventTags func
-
+- Removed goreleaser goos freeebsd and arch arm64
 
 ## [0.0.10] - 2020-02-23
 
