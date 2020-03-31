@@ -79,3 +79,10 @@ func TestEventPriority(t *testing.T) {
 	expectedValue := alerts.P1
 	assert.Contains(t, priority, expectedValue)
 }
+
+func TestStringInSlice(t *testing.T) {
+	testSlice := []string{"foo", "bar", "test"}
+	testString := "test"
+	testResult := stringInSlice(testString, testSlice)
+	assert.True(t, testResult)
+}

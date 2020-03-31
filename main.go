@@ -81,17 +81,6 @@ func configureRootCommand() *cobra.Command {
 	return cmd
 }
 
-// // eventKey func return Entity.Name/Check.Name to use in message and alias
-// func eventKey(event *types.Event) string {
-// 	return fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name)
-// }
-
-// // eventTags func return Entity.Name Check.Name Entity.Namespace, event.Entity.EntityClass to use as tags in Opsgenie
-// func eventTags(event *types.Event) (tags []string) {
-// 	tags = append(tags, event.Entity.Name, event.Check.Name, event.Entity.Namespace, event.Entity.EntityClass)
-// 	return tags
-// }
-
 // parseEventKeyTags func return string and []string with event data
 // string contains Entity.Name/Check.Name to use in message and alias
 // []string contains Entity.Name Check.Name Entity.Namespace, event.Entity.EntityClass to use as tags in Opsgenie
@@ -248,17 +237,14 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// check if event has a alert
 	hasAlert, _ := getAlert(alertCli, event)
-	// fmt.Printf("Has Alert: %s \n", hasAlert)
-	if hasAlert == notFound && event.Check.Status != 0 {
+	if hasAlert == notFound || event.Check.Status != 0 {
 		return createIncident(alertCli, event)
 	}
-
+	// close incident if status == 0
 	if hasAlert != notFound && event.Check.Status == 0 {
 		return closeAlert(alertCli, event, hasAlert)
 	}
-	if event.Check.Status != 0 {
-		return addNote(alertCli, event, hasAlert)
-	}
+
 	return nil
 }
 
@@ -331,28 +317,6 @@ func closeAlert(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event, alert
 	}
 	fmt.Printf("RequestID %s to Close %s", alertid, response.RequestID)
 
-	return nil
-}
-
-// addNode func add a note inside an alert if status != 0
-func addNote(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event, alertid string) error {
-
-	note := fmt.Sprintf("Last Check Status: %s, Output: %s", event.Check.State, event.Check.Output)
-
-	request := alerts.AddNoteRequest{
-		Identifier: &alerts.Identifier{
-			ID: alertid,
-		},
-		Source: source,
-		Note:   note,
-	}
-
-	response, err := alertCli.AddNote(request)
-
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	fmt.Println("RequestID: " + response.RequestID)
 	return nil
 }
 

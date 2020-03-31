@@ -7,6 +7,17 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.1.0] - 2020-03-31
+
+### Changed
+- Changed behaviour from opsgenie-handler to not add new alerts as a note and send them as alert.
+
+### Removed
+- Removed addNote func
+- Removed eventKey func
+- Removed eventTags func
+
+
 ## [0.0.10] - 2020-02-23
 
 ### Added
