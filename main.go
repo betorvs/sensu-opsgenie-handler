@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/opsgenie/opsgenie-go-sdk-v2/alert"
 	"github.com/opsgenie/opsgenie-go-sdk-v2/client"
@@ -199,7 +201,7 @@ func parseActions(event *types.Event) (output []string) {
 }
 
 // run func do everything
-func run(cmd *cobra.Command, args []string) error {
+func run(cmd *cobra.Command, args []string) (err error) {
 	if len(args) != 0 {
 		_ = cmd.Help()
 		return fmt.Errorf("invalid argument(s) received")
@@ -244,7 +246,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("event does not contain check")
 	}
 	// starting client instance
-	var alertClient = new(alert.Client)
+	var alertClient *alert.Client
 	switch apiRegion {
 	case "us":
 		alertClient, err = alert.NewClient(&client.Config{
@@ -261,6 +263,9 @@ func run(cmd *cobra.Command, args []string) error {
 			ApiKey:         authToken,
 			OpsGenieAPIURL: client.API_URL,
 		})
+	}
+	if err != nil {
+		return fmt.Errorf("failed to create client: %s", err)
 	}
 
 	// check if event has a alert
@@ -288,7 +293,9 @@ func createIncident(alertClient *alert.Client, event *types.Event) error {
 
 	actions := parseActions(event)
 
-	createResult, err := alertClient.Create(nil, &alert.CreateAlertRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	createResult, err := alertClient.Create(ctx, &alert.CreateAlertRequest{
 		Message:     title,
 		Alias:       title,
 		Description: description,
@@ -309,19 +316,6 @@ func createIncident(alertClient *alert.Client, event *types.Event) error {
 		// User:     "testuser@gmail.com",
 		Note: note,
 	})
-	// request := alerts.CreateAlertRequest{
-	// 	Message:     title,
-	// 	Alias:       title,
-	// 	Description: parseAnnotations(event),
-	// 	Teams:       teams,
-	// 	Entity:      event.Entity.Name,
-	// 	Source:      source,
-	// 	Priority:    eventPriority(event),
-	// 	Note:        note,
-	// 	Tags:        tags,
-	// }
-
-	// response, err := alertCli.Create(request)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
@@ -333,7 +327,9 @@ func createIncident(alertClient *alert.Client, event *types.Event) error {
 // getAlert func get a alert using an alias.
 func getAlert(alertClient *alert.Client, event *types.Event) (string, error) {
 	title, _ := parseEventKeyTags(event)
-	getResult, err := alertClient.Get(nil, &alert.GetAlertRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	getResult, err := alertClient.Get(ctx, &alert.GetAlertRequest{
 		IdentifierType:  alert.ALIAS,
 		IdentifierValue: title,
 	})
@@ -346,7 +342,9 @@ func getAlert(alertClient *alert.Client, event *types.Event) (string, error) {
 
 // closeAlert func close an alert if status == 0
 func closeAlert(alertClient *alert.Client, event *types.Event, alertid string) error {
-	closeResult, err := alertClient.Close(nil, &alert.CloseAlertRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	closeResult, err := alertClient.Close(ctx, &alert.CloseAlertRequest{
 		IdentifierType:  alert.ALERTID,
 		IdentifierValue: alertid,
 		// User:            "testuser@gmail.com",
