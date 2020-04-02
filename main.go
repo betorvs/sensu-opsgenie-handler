@@ -237,7 +237,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// check if event has a alert
 	hasAlert, _ := getAlert(alertCli, event)
-	if hasAlert == notFound || event.Check.Status != 0 {
+	if event.Check.Status != 0 {
 		return createIncident(alertCli, event)
 	}
 	// close incident if status == 0
