@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	alerts "github.com/opsgenie/opsgenie-go-sdk/alertsv2"
+	"github.com/opsgenie/opsgenie-go-sdk-v2/alert"
 	v2 "github.com/sensu/sensu-go/api/core/v2"
 	"github.com/sensu/sensu-go/types"
 	"github.com/stretchr/testify/assert"
@@ -51,7 +51,7 @@ func TestParseAnnotations(t *testing.T) {
 		},
 	}
 	// annotations := "documentation,playbook"
-	description := parseAnnotations(&event)
+	description, _ := parseAnnotations(&event)
 	assert.Contains(t, description, "documentation")
 	assert.Contains(t, description, "playbook")
 
@@ -76,7 +76,7 @@ func TestEventPriority(t *testing.T) {
 		},
 	}
 	priority := eventPriority(&event)
-	expectedValue := alerts.P1
+	expectedValue := alert.P1
 	assert.Contains(t, priority, expectedValue)
 }
 
@@ -85,4 +85,52 @@ func TestStringInSlice(t *testing.T) {
 	testString := "test"
 	testResult := stringInSlice(testString, testSlice)
 	assert.True(t, testResult)
+}
+
+func TestParseActions(t *testing.T) {
+	event1 := v2.Event{
+		Entity: &v2.Entity{
+			ObjectMeta: v2.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+		},
+		Check: &v2.Check{
+			ObjectMeta: v2.ObjectMeta{
+				Name: "test-check",
+				Annotations: map[string]string{
+					"opsgenie_priority": "P1",
+					"opsgenie_actions":  "workaround",
+				},
+			},
+			Output: "test output",
+		},
+	}
+	test1 := parseActions(&event1)
+	expectedValue1 := "workaround"
+	assert.Contains(t, test1, expectedValue1)
+
+	event2 := v2.Event{
+		Entity: &v2.Entity{
+			ObjectMeta: v2.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+		},
+		Check: &v2.Check{
+			ObjectMeta: v2.ObjectMeta{
+				Name: "test-check",
+				Annotations: map[string]string{
+					"opsgenie_priority": "P1",
+					"opsgenie_actions":  "workaround,bigrestart",
+				},
+			},
+			Output: "test output",
+		},
+	}
+	test2 := parseActions(&event2)
+	expectedValue2 := "workaround"
+	assert.Contains(t, test2, expectedValue2)
+	expectedValue2a := "bigrestart"
+	assert.Contains(t, test2, expectedValue2a)
 }

@@ -2,7 +2,7 @@
   "entity": {
     "entity_class": "agent",
     "system": {
-      "hostname": "webserver01",
+      "hostname": "webserver02",
       "os": "linux",
       "platform": "centos",
       "platform_family": "rhel",
@@ -38,7 +38,7 @@
     },
     "subscriptions": [
       "testing",
-      "entity:webserver01"
+      "entity:webserver02"
     ],
     "last_seen": 1542667635,
     "deregister": false,
@@ -56,7 +56,7 @@
       "secret"
     ],
     "metadata": {
-      "name": "webserver01",
+      "name": "webserver02",
       "namespace": "default",
       "labels": null,
       "annotations": {
