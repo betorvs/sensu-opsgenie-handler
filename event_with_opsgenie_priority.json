@@ -1,6 +1,7 @@
 {
   "entity": {
     "entity_class": "agent",
+    "sensu_agent_version": "5.17.2",
     "system": {
       "hostname": "webserver04",
       "os": "linux",

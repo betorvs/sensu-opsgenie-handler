@@ -1,6 +1,7 @@
 {
   "entity": {
     "entity_class": "agent",
+    "sensu_agent_version": "5.17.2",
     "system": {
       "hostname": "webserver04",
       "os": "linux",
@@ -104,7 +105,7 @@
     ],
     "issued": 1542667666,
     "output": "example output",
-    "state": "failing",
+    "state": "passing",
     "status": 0,
     "total_state_change": 0,
     "last_ok": 0,

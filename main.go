@@ -184,6 +184,13 @@ func parseAnnotations(event *types.Event) (string, map[string]string) {
 			}
 		}
 	}
+	if event.Entity.EntityClass == "agent" {
+		details["arch"] = event.Entity.System.GetArch()
+		details["os"] = event.Entity.System.GetOS()
+		details["platform"] = event.Entity.System.GetPlatform()
+		details["platform_family"] = event.Entity.System.GetPlatformFamily()
+		details["platform_version"] = event.Entity.System.GetPlatformVersion()
+	}
 	if sensuDashboard != "disabled" {
 		output += fmt.Sprintf("source: %s/%s/events/%s/%s \n", sensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
 		details["sensuDashboard"] = fmt.Sprintf("source: %s/%s/events/%s/%s \n", sensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
@@ -329,6 +336,7 @@ func getAlert(alertClient *alert.Client, event *types.Event) (string, error) {
 	title, _ := parseEventKeyTags(event)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	fmt.Printf("Checking for alert %s \n", title)
 	getResult, err := alertClient.Get(ctx, &alert.GetAlertRequest{
 		IdentifierType:  alert.ALIAS,
 		IdentifierValue: title,
