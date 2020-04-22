@@ -126,6 +126,34 @@ Or inside check:
 
 With this new feature you can include any annotation field in message to show inside OpsGenie alert. By default they will look for documentation and playbook. 
 
+### To override authtoken and team handler configuration
+
+Important: If you configure it in entity annotations or check annotations make sure to configure both options `opsgenie_authtoken` and `opsgenie_team`, because using a new api key should be related in another Team. And check annotations will always override entity annotation that means if it found 2 annotations with auth token, it will use that from check. Make sure to configure redact for `opsgenie_authtoken`.
+
+```
+{
+  "type": "CheckConfig",
+  "api_version": "core/v2",
+  "metadata": {
+    "name": "interval_check",
+    "namespace": "default",
+    "annotations": {
+        "opsgenie_priority": "P2",
+        "opsgenie_authtoken": "long-auth-token",
+        "opsgenie_team": "newTeam",
+        "documentation": "https://docs.sensu.io/sensu-go/latest"
+    }
+  },
+  "spec": {
+    "command": "check-cpu.sh -w 75 -c 90",
+    "subscriptions": ["system"],
+    "handlers": ["opsgenie"],
+    "interval": 60,
+    "publish": true
+  }
+}
+```
+
 
 ### Asset creation
 
