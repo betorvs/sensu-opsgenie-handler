@@ -33,6 +33,7 @@ var (
 	annotations    string
 	sensuDashboard string
 	stdin          *os.File
+	extraInfo      string
 )
 
 func main() {
@@ -207,6 +208,70 @@ func parseActions(event *types.Event) (output []string) {
 	return output
 }
 
+// parseOpsgenieAuthToken can parse data from event looking for opsgenie_authtoken and use it instead default one
+func parseOpsgenieAuthToken(event *types.Event) string {
+	var newAuthToken string
+	// first look into entity annotations
+	if event.Entity.Annotations != nil {
+		for key, value := range event.Entity.Annotations {
+			if key == "opsgenie_authtoken" {
+				newAuthToken = value
+			}
+		}
+	}
+	// then look into check annotations
+	// check annotations will override entity annotation
+	if event.Check.Annotations != nil {
+		for key, value := range event.Check.Annotations {
+			if key == "opsgenie_authtoken" {
+				newAuthToken = value
+			}
+		}
+	}
+	if newAuthToken != "" {
+		extraInfo += "Using AuthToken found in annotations\n"
+		return newAuthToken
+	}
+	newAuthToken = authToken
+	return newAuthToken
+}
+
+// func parseOpsgenieTeams can parse data from event looking for opsgenie_team and use it instead default one
+func parseOpsgenieTeams(event *types.Event) []alert.Responder {
+	teams := []alert.Responder{
+		{Type: alert.EscalationResponder, Name: team},
+		{Type: alert.ScheduleResponder, Name: team},
+	}
+	var newTeam string
+	// first look into entity annotations
+	if event.Entity.Annotations != nil {
+		for key, value := range event.Entity.Annotations {
+			if key == "opsgenie_team" {
+				newTeam = value
+			}
+		}
+	}
+	// then look into check annotations
+	// check annotations will override entity annotation
+	if event.Check.Annotations != nil {
+		for key, value := range event.Check.Annotations {
+			if key == "opsgenie_team" {
+				newTeam = value
+			}
+		}
+	}
+
+	if newTeam != "" {
+		extraInfo += "Using Teams found annotations\n"
+		teams := []alert.Responder{
+			{Type: alert.EscalationResponder, Name: newTeam},
+			{Type: alert.ScheduleResponder, Name: newTeam},
+		}
+		return teams
+	}
+	return teams
+}
+
 // run func do everything
 func run(cmd *cobra.Command, args []string) (err error) {
 	if len(args) != 0 {
@@ -254,20 +319,21 @@ func run(cmd *cobra.Command, args []string) (err error) {
 	}
 	// starting client instance
 	var alertClient *alert.Client
+
 	switch apiRegion {
 	case "us":
 		alertClient, err = alert.NewClient(&client.Config{
-			ApiKey:         authToken,
+			ApiKey:         parseOpsgenieAuthToken(event),
 			OpsGenieAPIURL: client.API_URL,
 		})
 	case "eu":
 		alertClient, err = alert.NewClient(&client.Config{
-			ApiKey:         authToken,
+			ApiKey:         parseOpsgenieAuthToken(event),
 			OpsGenieAPIURL: client.API_URL_EU,
 		})
 	default:
 		alertClient, err = alert.NewClient(&client.Config{
-			ApiKey:         authToken,
+			ApiKey:         parseOpsgenieAuthToken(event),
 			OpsGenieAPIURL: client.API_URL,
 		})
 	}
@@ -306,10 +372,7 @@ func createIncident(alertClient *alert.Client, event *types.Event) error {
 		Message:     title,
 		Alias:       title,
 		Description: description,
-		Responders: []alert.Responder{
-			{Type: alert.EscalationResponder, Name: team},
-			{Type: alert.ScheduleResponder, Name: team},
-		},
+		Responders:  parseOpsgenieTeams(event),
 		// VisibleTo: [] alert.Responder{
 		//   {Type: alert.UserResponder, Username: "testuser@gmail.com"},
 		//   {Type: alert.TeamResponder, Name: "admin"},
@@ -324,6 +387,7 @@ func createIncident(alertClient *alert.Client, event *types.Event) error {
 		Note: note,
 	})
 	if err != nil {
+		fmt.Println(extraInfo)
 		fmt.Println(err.Error())
 	} else {
 		fmt.Println("Create request ID: " + createResult.RequestId)
@@ -360,6 +424,7 @@ func closeAlert(alertClient *alert.Client, event *types.Event, alertid string) e
 		Note:   "Closed Automatically",
 	})
 	if err != nil {
+		fmt.Println(extraInfo)
 		fmt.Printf("[ERROR] Not Closed: %s \n", err)
 	}
 	fmt.Printf("RequestID %s to Close %s \n", alertid, closeResult.RequestId)
