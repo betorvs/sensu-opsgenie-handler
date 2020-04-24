@@ -156,6 +156,7 @@ func TestParseAuthTokenAndTeams(t *testing.T) {
 			Output: "test output",
 		},
 	}
+	allowOverride = true
 	testAuth1 := parseOpsgenieAuthToken(&event1)
 	expectedValueAuth1 := "aaaa-wwww-sssss-33333-zzzzz"
 	assert.Contains(t, testAuth1, expectedValueAuth1)
