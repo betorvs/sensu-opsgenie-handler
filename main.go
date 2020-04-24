@@ -27,6 +27,7 @@ var (
 	apiRegion      string
 	annotations    string
 	sensuDashboard string
+	allowOverride  bool
 	stdin          *os.File
 	extraInfo      string
 )
@@ -80,6 +81,8 @@ func configureRootCommand() *cobra.Command {
 		"sensuDashboard",
 		os.Getenv("OPSGENIE_SENSU_DASHBOARD"),
 		"The OpsGenie Handler will use it to create a source Sensu Dashboard URL. Use OPSGENIE_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n")
+
+	cmd.Flags().BoolVar(&allowOverride, "allowOverride", false, "Using --allowOverride will enable settings from sensu event and it will override OPSGENIE_AUTHTOKEN and OPSGENIE_TEAM environment variables")
 
 	return cmd
 }
@@ -223,7 +226,7 @@ func parseOpsgenieAuthToken(event *types.Event) string {
 			}
 		}
 	}
-	if newAuthToken != "" {
+	if newAuthToken != "" && allowOverride {
 		extraInfo += "Using AuthToken found in annotations\n"
 		return newAuthToken
 	}
@@ -256,7 +259,7 @@ func parseOpsgenieTeams(event *types.Event) []alert.Responder {
 		}
 	}
 
-	if newTeam != "" {
+	if newTeam != "" && allowOverride {
 		extraInfo += "Using Teams found annotations\n"
 		teams := []alert.Responder{
 			{Type: alert.EscalationResponder, Name: newTeam},

@@ -82,6 +82,7 @@ Usage:
   sensu-opsgenie-handler [flags]
 
 Flags:
+      --allowOverride            Using --allowOverride will enable settings from sensu event and it will override OPSGENIE_AUTHTOKEN and OPSGENIE_TEAM environment variables
   -a, --auth string              The OpsGenie V2 API authentication token, use default from OPSGENIE_AUTHTOKEN env var (no default value)
   -h, --help                     help for sensu-opsgenie-handler
   -r, --region string            The OpsGenie V2 API URL, use default from OPSGENIE_REGION env var (default value us)
@@ -105,7 +106,7 @@ annotations:
 ```
 
 Or inside check:
-```sh
+```json
 {
   "type": "CheckConfig",
   "api_version": "core/v2",
@@ -135,7 +136,34 @@ With this new feature you can include any annotation field in message to show in
 
 Important: If you configure it in entity annotations or check annotations make sure to configure both options `opsgenie_authtoken` and `opsgenie_team`, because using a new api key should be related in another Team. And check annotations will always override entity annotation that means if it found 2 annotations with auth token, it will use that from check. Make sure to configure redact for `opsgenie_authtoken`.
 
+You should run sensu-opsgenie-handler with `--allowOverride` flag. Example:
+
+```json
+{
+    "api_version": "core/v2",
+    "type": "Handler",
+    "metadata": {
+        "namespace": "default",
+        "name": "opsgenie"
+    },
+    "spec": {
+        "type": "pipe",
+        "command": "sensu-opsgenie-handler --allowOverride",
+        "env_vars": [
+          "OPSGENIE_AUTHTOKEN=SECRET",
+          "OPSGENIE_TEAM=TEAM_NAME"
+        ],
+        "timeout": 10,
+        "filters": [
+            "is_incident"
+        ]
+    }
+}
 ```
+
+Example of Check using annotation `opsgenie_authtoken` and `opsgenie_team`:
+
+```json
 {
   "type": "CheckConfig",
   "api_version": "core/v2",
