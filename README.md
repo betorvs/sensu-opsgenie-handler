@@ -8,6 +8,8 @@ The Sensu Go OpsGenie Handler is a [Sensu Event Handler][3] which manages
 
 This handler was inspired by [pagerduty plugin][6].
 
+After version 1.0.0 we changed opsgenie [sdk][7] to [sdk-v2][8].
+
 ## Installation
 
 Download the latest version of the sensu-opsgenie-handler from [releases][4],
@@ -36,7 +38,7 @@ Example Sensu Go handler definition:
         "env_vars": [
           "OPSGENIE_AUTHTOKEN=SECRET",
           "OPSGENIE_TEAM=TEAM_NAME",
-          "OPSGENIE_APIURL=https://api.eu.opsgenie.com"
+          "OPSGENIE_REGION=eu"
         ],
         "timeout": 10,
         "filters": [
@@ -74,15 +76,18 @@ Example Sensu Go check definition:
 
 Help:
 ```
+The Sensu Go OpsGenie handler for incident management
+
 Usage:
   sensu-opsgenie-handler [flags]
 
 Flags:
-  -a, --auth string             The OpsGenie V2 API authentication token, use default from OPSGENIE_AUTHTOKEN env var
-  -h, --help                    help for sensu-opsgenie-handler
-  -t, --team string             The OpsGenie V2 API Team, use default from OPSGENIE_TEAM env var
-  -w, --withAnnotations string  To parse any annotation to send to OpsGenie inside message field. Use                                                OPSGENIE_ANNOTATIONS env var. Split them using comma (,).
-  --sensuDashboard              Sensu Dashboard URL like: http://sensu-dashboard.example.local/c/~/n", use OPSGENIE_SENSU_DASHBOARD env var.
+  -a, --auth string              The OpsGenie V2 API authentication token, use default from OPSGENIE_AUTHTOKEN env var (no default value)
+  -h, --help                     help for sensu-opsgenie-handler
+  -r, --region string            The OpsGenie V2 API URL, use default from OPSGENIE_REGION env var (default value us)
+      --sensuDashboard string    The OpsGenie Handler will use it to create a source Sensu Dashboard URL. Use OPSGENIE_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n
+  -t, --team string              The OpsGenie V2 API Team, use default from OPSGENIE_TEAM env var (no default value)
+  -w, --withAnnotations string   The OpsGenie Handler will parse check and entity annotations with these values. Use OPSGENIE_ANNOTATIONS env var with commas, like: documentation,playbook (default value "documentation,playbook")
 
 ```
 
@@ -90,7 +95,7 @@ Flags:
 
 To configure OpsGenie Sensu Integration follow these first part in [OpsGenie Docs][5].
 
-### To use Opsgenie Priority
+### To use Opsgenie Priority from Entity or Check
 
 Please add this annotations inside sensu-agent:
 ```sh
@@ -126,7 +131,7 @@ Or inside check:
 
 With this new feature you can include any annotation field in message to show inside OpsGenie alert. By default they will look for documentation and playbook. 
 
-### To override authtoken and team handler configuration
+### To override authtoken and team handler configuration from Entity or Check
 
 Important: If you configure it in entity annotations or check annotations make sure to configure both options `opsgenie_authtoken` and `opsgenie_team`, because using a new api key should be related in another Team. And check annotations will always override entity annotation that means if it found 2 annotations with auth token, it will use that from check. Make sure to configure redact for `opsgenie_authtoken`.
 
@@ -182,3 +187,5 @@ See https://github.com/sensu/sensu-go/blob/master/CONTRIBUTING.md
 [4]: https://github.com/betorvs/sensu-opsgenie-handler/releases
 [5]: https://docs.opsgenie.com/docs/sensu-integration#section-add-sensu-integration-in-opsgenie
 [6]: https://github.com/sensu/sensu-pagerduty-handler
+[7]: https://github.com/opsgenie/opsgenie-go-sdk
+[8]: https://github.com/opsgenie/opsgenie-go-sdk-v2

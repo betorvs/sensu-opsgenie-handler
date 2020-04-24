@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/opsgenie/opsgenie-go-sdk-v2/alert"
+	"github.com/opsgenie/opsgenie-go-sdk-v2/client"
 	v2 "github.com/sensu/sensu-go/api/core/v2"
 	"github.com/sensu/sensu-go/types"
 	"github.com/stretchr/testify/assert"
@@ -133,4 +134,57 @@ func TestParseActions(t *testing.T) {
 	assert.Contains(t, test2, expectedValue2)
 	expectedValue2a := "bigrestart"
 	assert.Contains(t, test2, expectedValue2a)
+}
+
+func TestParseAuthTokenAndTeams(t *testing.T) {
+	event1 := v2.Event{
+		Entity: &v2.Entity{
+			ObjectMeta: v2.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+		},
+		Check: &v2.Check{
+			ObjectMeta: v2.ObjectMeta{
+				Name: "test-check",
+				Annotations: map[string]string{
+					"opsgenie_priority":  "P1",
+					"opsgenie_authtoken": "aaaa-wwww-sssss-33333-zzzzz",
+					"opsgenie_team":      "ops",
+				},
+			},
+			Output: "test output",
+		},
+	}
+	testAuth1 := parseOpsgenieAuthToken(&event1)
+	expectedValueAuth1 := "aaaa-wwww-sssss-33333-zzzzz"
+	assert.Contains(t, testAuth1, expectedValueAuth1)
+	testTeams1 := parseOpsgenieTeams(&event1)
+	expectedValueTeams1 := []alert.Responder{
+		{Type: alert.EscalationResponder, Name: "ops"},
+		{Type: alert.ScheduleResponder, Name: "ops"},
+	}
+	assert.Equal(t, testTeams1, expectedValueTeams1)
+
+}
+
+func TestSwitchOpsgenieRegion(t *testing.T) {
+	expectedValueUS := client.API_URL
+	expectedValueEU := client.API_URL_EU
+
+	testUS := switchOpsgenieRegion()
+
+	assert.Equal(t, testUS, expectedValueUS)
+
+	apiRegion = "eu"
+
+	testEU := switchOpsgenieRegion()
+
+	assert.Equal(t, testEU, expectedValueEU)
+
+	apiRegion = "EU"
+
+	testEU2 := switchOpsgenieRegion()
+
+	assert.Equal(t, testEU2, expectedValueEU)
 }

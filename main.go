@@ -12,11 +12,6 @@ import (
 	"github.com/opsgenie/opsgenie-go-sdk-v2/alert"
 	"github.com/opsgenie/opsgenie-go-sdk-v2/client"
 
-	// "github.com/opsgenie/opsgenie-go-sdk/alertsv2"
-
-	// "github.com/opsgenie/opsgenie-go-sdk/alertsv2"
-	// alerts "github.com/opsgenie/opsgenie-go-sdk/alertsv2"
-	// ogcli "github.com/opsgenie/opsgenie-go-sdk/client"
 	"github.com/sensu/sensu-go/types"
 	"github.com/spf13/cobra"
 )
@@ -73,7 +68,7 @@ func configureRootCommand() *cobra.Command {
 		"region",
 		"r",
 		os.Getenv("OPSGENIE_REGION"),
-		"The OpsGenie V2 API URL, use default from OPSGENIE_APIURL env var")
+		"The OpsGenie V2 API URL, use default from OPSGENIE_REGION env var")
 
 	cmd.Flags().StringVarP(&annotations,
 		"withAnnotations",
@@ -272,6 +267,21 @@ func parseOpsgenieTeams(event *types.Event) []alert.Responder {
 	return teams
 }
 
+// switchOpsgenieRegion func
+func switchOpsgenieRegion() client.ApiUrl {
+	var region client.ApiUrl
+	apiRegionLowCase := strings.ToLower(apiRegion)
+	switch apiRegionLowCase {
+	case "eu":
+		region = client.API_URL_EU
+	case "us":
+		region = client.API_URL
+	default:
+		region = client.API_URL
+	}
+	return region
+}
+
 // run func do everything
 func run(cmd *cobra.Command, args []string) (err error) {
 	if len(args) != 0 {
@@ -317,35 +327,20 @@ func run(cmd *cobra.Command, args []string) (err error) {
 	if !event.HasCheck() {
 		return fmt.Errorf("event does not contain check")
 	}
-	// starting client instance
-	var alertClient *alert.Client
 
-	switch apiRegion {
-	case "us":
-		alertClient, err = alert.NewClient(&client.Config{
-			ApiKey:         parseOpsgenieAuthToken(event),
-			OpsGenieAPIURL: client.API_URL,
-		})
-	case "eu":
-		alertClient, err = alert.NewClient(&client.Config{
-			ApiKey:         parseOpsgenieAuthToken(event),
-			OpsGenieAPIURL: client.API_URL_EU,
-		})
-	default:
-		alertClient, err = alert.NewClient(&client.Config{
-			ApiKey:         parseOpsgenieAuthToken(event),
-			OpsGenieAPIURL: client.API_URL,
-		})
-	}
+	alertClient, err := alert.NewClient(&client.Config{
+		ApiKey:         parseOpsgenieAuthToken(event),
+		OpsGenieAPIURL: switchOpsgenieRegion(),
+	})
 	if err != nil {
 		return fmt.Errorf("failed to create client: %s", err)
 	}
 
-	// check if event has a alert
-	hasAlert, _ := getAlert(alertClient, event)
 	if event.Check.Status != 0 {
 		return createIncident(alertClient, event)
 	}
+	// check if event has a alert
+	hasAlert, _ := getAlert(alertClient, event)
 	// close incident if status == 0
 	if hasAlert != notFound && event.Check.Status == 0 {
 		return closeAlert(alertClient, event, hasAlert)
