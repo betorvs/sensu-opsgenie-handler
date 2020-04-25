@@ -15,6 +15,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Changed
 - Added flag `--region` to choose opsgenie region. Can be configured using environment variable too `OPSGENIE_REGION`. This feature replaces old `OPSGENIE_APIURL`.
 - Updated golang version to 1.14. As require for this updated golangci-lint to `v1.23.8`
+- Changed opsgenie sdk to [v2](https://github.com/opsgenie/opsgenie-go-sdk-v2). 
 
 ### Added
 - Added flag `--allowOverride` to enable change opsgenie auth token and team. With this feature you can avoid creating multiples handlers only because one check or entity. Use wisely.
