@@ -50,7 +50,7 @@ func TestParseAnnotations(t *testing.T) {
 			Output: "test output",
 		},
 	}
-	// annotations := "documentation,playbook"
+	plugin.Annotations = "documentation,playbook"
 	description := parseAnnotations(&event)
 	assert.Contains(t, description, "documentation")
 	assert.Contains(t, description, "playbook")

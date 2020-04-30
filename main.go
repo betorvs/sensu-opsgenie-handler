@@ -1,17 +1,18 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
+	"io"
 	"strings"
+	"text/template"
 
 	"github.com/opsgenie/opsgenie-go-sdk/alertsv2"
 	alerts "github.com/opsgenie/opsgenie-go-sdk/alertsv2"
 	ogcli "github.com/opsgenie/opsgenie-go-sdk/client"
+	"github.com/sensu-community/sensu-plugin-sdk/sensu"
 	"github.com/sensu/sensu-go/types"
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -19,75 +20,124 @@ const (
 	source   = "sensuGo"
 )
 
+// Config represents the handler plugin config.
+type Config struct {
+	sensu.PluginConfig
+	APIURL          string
+	AuthToken       string
+	Team            string
+	Annotations     string
+	SensuDashboard  string
+	MessageTemplate string
+	MessageLimit	int
+}
+
+// used to handle getting text/template or html/template
+type templater interface {
+	Execute(wr io.Writer, data interface{}) error
+}
+
 var (
-	authToken      string
-	team           string
-	apiURL         string
-	annotations    string
-	sensuDashboard string
-	stdin          *os.File
+	plugin = Config{
+		PluginConfig: sensu.PluginConfig{
+			Name:     "sensu-opsgenie-handler",
+			Short:    "The Sensu Go OpsGenie handler for incident management",
+			Keyspace: "sensu.io/plugins/sensu-opsgenie-handler/config",
+		},
+	}
+
+	options = []*sensu.PluginConfigOption{
+		{
+			Path:      "url",
+			Env:       "OPSGENIE_APIURL",
+			Argument:  "url",
+			Shorthand: "u",
+			Default:   "https://api.opsgenie.com",
+			Usage:     "The OpsGenie V2 API URL, use default from OPSGENIE_APIURL env var",
+			Value:     &plugin.APIURL,
+		},
+		{
+			Path:      "auth",
+			Env:       "OPSGENIE_AUTHTOKEN",
+			Argument:  "auth",
+			Shorthand: "a",
+			Default:   "",
+			Usage:     "The OpsGenie V2 API authentication token, use default from OPSGENIE_AUTHTOKEN env var",
+			Value:     &plugin.AuthToken,
+		},
+		{
+			Path:      "team",
+			Env:       "OPSGENIE_TEAM",
+			Argument:  "team",
+			Shorthand: "t",
+			Default:   "",
+			Usage:     "The OpsGenie V2 API Team, use default from OPSGENIE_TEAM env var",
+			Value:     &plugin.Team,
+		},
+		{
+			Path:      "withAnnotations",
+			Env:       "OPSGENIE_ANNOTATIONS",
+			Argument:  "withAnnotations",
+			Shorthand: "w",
+			Default:   "documentation,playbook",
+			Usage:     "The OpsGenie Handler will parse check and entity annotations with these values. Use OPSGENIE_ANNOTATIONS env var with commas, like: documentation,playbook",
+			Value:     &plugin.Annotations,
+		},
+		{
+			Path:      "sensuDashboard",
+			Env:       "OPSGENIE_SENSU_DASHBOARD",
+			Argument:  "sensuDashboard",
+			Shorthand: "s",
+			Default:   "disabled",
+			Usage:     "The OpsGenie Handler will use it to create a source Sensu Dashboard URL. Use OPSGENIE_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n",
+			Value:     &plugin.SensuDashboard,
+		},
+		{
+			Path:      "messageTemplate",
+			Env:       "OPSGENIE_MESSAGE_TEMPLATE",
+			Argument:  "messageTemplate",
+			Shorthand: "m",
+			Default:   "{{.Entity.Name}}/{{.Check.Name}}",
+			Usage:     "The template for the message to be sent",
+			Value:     &plugin.MessageTemplate,
+		},
+		{
+			Path:      "messageLimit",
+			Env:       "OPSGENIE_MESSAGE_LIMIT",
+			Argument:  "messageLimit",
+			Shorthand: "l",
+			Default:   100,
+			Usage:     "The maximum length of the message field",
+			Value:     &plugin.MessageLimit,
+		},
+	}
 )
 
 func main() {
-	rootCmd := configureRootCommand()
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
+	handler := sensu.NewGoHandler(&plugin.PluginConfig, options, checkArgs, executeHandler)
+	handler.Execute()
 }
 
-func configureRootCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "sensu-opsgenie-handler",
-		Short: "The Sensu Go OpsGenie handler for incident management",
-		RunE:  run,
+func checkArgs(_ *types.Event) error {
+	if len(plugin.AuthToken) == 0 {
+		return fmt.Errorf("authentication token is empty")
 	}
-
-	/*
-	   Security Sensitive flags
-	     - default to using envvar value
-	     - do not mark as required
-	     - manually test for empty value
-	*/
-	cmd.Flags().StringVarP(&authToken,
-		"auth",
-		"a",
-		os.Getenv("OPSGENIE_AUTHTOKEN"),
-		"The OpsGenie V2 API authentication token, use default from OPSGENIE_AUTHTOKEN env var")
-
-	cmd.Flags().StringVarP(&team,
-		"team",
-		"t",
-		os.Getenv("OPSGENIE_TEAM"),
-		"The OpsGenie V2 API Team, use default from OPSGENIE_TEAM env var")
-
-	cmd.Flags().StringVarP(&apiURL,
-		"url",
-		"u",
-		os.Getenv("OPSGENIE_APIURL"),
-		"The OpsGenie V2 API URL, use default from OPSGENIE_APIURL env var")
-
-	cmd.Flags().StringVarP(&annotations,
-		"withAnnotations",
-		"w",
-		os.Getenv("OPSGENIE_ANNOTATIONS"),
-		"The OpsGenie Handler will parse check and entity annotations with these values. Use OPSGENIE_ANNOTATIONS env var with commas, like: documentation,playbook")
-
-	cmd.Flags().StringVar(&sensuDashboard,
-		"sensuDashboard",
-		os.Getenv("OPSGENIE_SENSU_DASHBOARD"),
-		"The OpsGenie Handler will use it to create a source Sensu Dashboard URL. Use OPSGENIE_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n")
-
-	return cmd
+	if len(plugin.Team) == 0 {
+		return fmt.Errorf("team is empty")
+	}
+	return nil
 }
 
 // parseEventKeyTags func return string and []string with event data
 // string contains Entity.Name/Check.Name to use in message and alias
 // []string contains Entity.Name Check.Name Entity.Namespace, event.Entity.EntityClass to use as tags in Opsgenie
 func parseEventKeyTags(event *types.Event) (title string, tags []string) {
-	title = fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name)
+	title, err := resolveTemplate(plugin.MessageTemplate, event)
+	if err != nil {
+		return "", []string{}
+	}
 	tags = append(tags, event.Entity.Name, event.Check.Name, event.Entity.Namespace, event.Entity.EntityClass)
-	return title, tags
+	return trim(title, plugin.MessageLimit), tags
 }
 
 // eventPriority func read priority in the event and return alerts.PX
@@ -154,10 +204,7 @@ func stringInSlice(a string, list []string) bool {
 // parseAnnotations func try to find a predeterminated keys
 func parseAnnotations(event *types.Event) string {
 	var output string
-	if annotations == "" {
-		annotations = "documentation,playbook"
-	}
-	tags := strings.Split(annotations, ",")
+	tags := strings.Split(plugin.Annotations, ",")
 	if event.Check.Annotations != nil {
 		for key, value := range event.Check.Annotations {
 			if stringInSlice(key, tags) {
@@ -172,67 +219,18 @@ func parseAnnotations(event *types.Event) string {
 			}
 		}
 	}
-	if sensuDashboard != "disabled" {
-		output += fmt.Sprintf("source: %s/%s/events/%s/%s \n", sensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
+	if plugin.SensuDashboard != "disabled" {
+		output += fmt.Sprintf("source: %s/%s/events/%s/%s \n", plugin.SensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
 	}
 	output += fmt.Sprintf("check output: %s", event.Check.Output)
 	return output
 }
 
-// run func do everything
-func run(cmd *cobra.Command, args []string) error {
-	if len(args) != 0 {
-		_ = cmd.Help()
-		return fmt.Errorf("invalid argument(s) received")
-	}
-
-	if authToken == "" {
-		_ = cmd.Help()
-		return fmt.Errorf("authentication token is empty")
-
-	}
-
-	if team == "" {
-		_ = cmd.Help()
-		return fmt.Errorf("team is empty")
-
-	}
-
-	if apiURL == "" {
-		apiURL = "https://api.opsgenie.com"
-	}
-
-	if sensuDashboard == "" {
-		sensuDashboard = "disabled"
-	}
-
-	if stdin == nil {
-		stdin = os.Stdin
-	}
-
-	eventJSON, err := ioutil.ReadAll(stdin)
-	if err != nil {
-		return fmt.Errorf("failed to read stdin: %s", err)
-	}
-
-	event := &types.Event{}
-	err = json.Unmarshal(eventJSON, event)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal stdin data: %s", err)
-	}
-
-	if err = event.Validate(); err != nil {
-		return fmt.Errorf("failed to validate event: %s", err)
-	}
-
-	if !event.HasCheck() {
-		return fmt.Errorf("event does not contain check")
-	}
-
+func executeHandler(event *types.Event) error {
 	// starting client instance
 	cli := new(ogcli.OpsGenieClient)
-	cli.SetAPIKey(authToken)
-	cli.SetOpsGenieAPIUrl(strings.TrimSuffix(apiURL, "/"))
+	cli.SetAPIKey(plugin.AuthToken)
+	cli.SetOpsGenieAPIUrl(strings.TrimSuffix(plugin.APIURL, "/"))
 	alertCli, _ := cli.AlertV2()
 
 	// check if event has a alert
@@ -256,7 +254,7 @@ func createIncident(alertCli *ogcli.OpsGenieAlertV2Client, event *types.Event) e
 	}
 
 	teams := []alerts.TeamRecipient{
-		&alerts.Team{Name: team},
+		&alerts.Team{Name: plugin.Team},
 	}
 	title, tags := parseEventKeyTags(event)
 
@@ -327,4 +325,34 @@ func getNote(event *types.Event) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("Event data update:\n\n%s", eventJSON), nil
+}
+
+// resolveTemplate func resolves events in go templates
+func resolveTemplate(templateValue string, event *types.Event) (string, error) {
+	var (
+		resolved bytes.Buffer
+		tmpl     templater
+		err      error
+	)
+
+	tmpl, err = template.New("test").Parse(templateValue)
+
+	if err != nil {
+		return "", err
+	}
+
+	err = tmpl.Execute(&resolved, *event)
+	if err != nil {
+		return "", err
+	}
+
+	return resolved.String(), nil
+}
+
+// time func returns only the first n bytes of a string
+func trim(s string, n int) string {
+	if len(s) > n {
+		return s[:n]
+	}
+	return s
 }

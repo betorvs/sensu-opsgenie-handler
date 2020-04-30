@@ -7,6 +7,16 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Changed
+- Move to Go Modules
+- Use new Sensu SDK
+- Move from Travis to GitHub Actions
+- Reorganize README
+- Added timestamps to all the test events
+
+### Added
+- Made message a configurable template, including a length limit
+
 ## [0.1.0] - 2020-03-31
 
 ### Changed
