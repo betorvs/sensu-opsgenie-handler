@@ -1,4 +1,5 @@
 {
+  "timestamp": 1522100915,
   "entity": {
     "entity_class": "agent",
     "sensu_agent_version": "5.17.2",
@@ -60,9 +61,7 @@
       "name": "webserver03",
       "namespace": "default",
       "labels": null,
-      "annotations": {
-        "opsgenie_priority": "P2"
-      }
+      "annotations": null
     }
   },
   "check": {
@@ -119,7 +118,7 @@
       "namespace": "default",
       "labels": null,
       "annotations": {
-        "opsgenie_priority": "P1",
+        "sensu.io/plugins/sensu-opsgenie-handler/config/priority": "P1",
         "opsgenie_actions": "workaround,bigrestart"
       }
     }

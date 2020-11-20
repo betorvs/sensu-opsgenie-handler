@@ -7,19 +7,31 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
-## [1.0.0] -
+
+
+## [1.0.0] - 2020-11-20
 
 ### Removed
 - Removed flag `OPSGENIE_APIURL` now we use constants from opsgenie sdk-v2.
+- Removed `opsgenie_priority` annotation. Should use: `"sensu.io/plugins/sensu-opsgenie-handler/config/priority": "P3"`.
+- Removed travis-ci integration
 
 ### Changed
 - Added flag `--region` to choose opsgenie region. Can be configured using environment variable too `OPSGENIE_REGION`. This feature replaces old `OPSGENIE_APIURL`.
+- Added flag `--priority` to change Opsgenie default priority. String field. Expected: "P1", "P2", "P3", "P4" and "P5".
 - Updated golang version to 1.14. As require for this updated golangci-lint to `v1.23.8`
 - Changed opsgenie sdk to [v2](https://github.com/opsgenie/opsgenie-go-sdk-v2). 
+- Changed from spf13/cobra to sensu-community/sensu-plugin-sdk. 
+- Changed withAnnotations to parse all annotations, and exclude if it contains `sensu.io/plugins/sensu-opsgenie-handler/config`, to send to Opsgenie.
 
 ### Added
-- Added flag `--allowOverride` to enable change opsgenie auth token and team. With this feature you can avoid creating multiples handlers only because one check or entity. Use wisely.
 - Added more tests
+- Added `--allowLabels` to parse all Labels and send to Opsgenie.
+- Added `--fullDetails` to add all kind of details in Opsgenie.
+- Added `--descriptionLimit`, `--descriptionTemplate`, `--includeEventInNote`, `--messageLimit`, `--messageTemplate` from this [forked](https://github.com/nixwiz/sensu-opsgenie-handler)
+
+### Removed
+- Removed flag `--allowOverride` to enable change opsgenie auth token and team. With this feature you can avoid creating multiples handlers only because one check or entity. We can achieve the same feature with Argument Annotations we can overwrite it even from a event through agent event api.
 
 ## [0.1.0] - 2020-03-31
 

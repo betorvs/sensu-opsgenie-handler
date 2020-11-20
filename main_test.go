@@ -6,7 +6,6 @@ import (
 
 	"github.com/opsgenie/opsgenie-go-sdk-v2/alert"
 	"github.com/opsgenie/opsgenie-go-sdk-v2/client"
-	v2 "github.com/sensu/sensu-go/api/core/v2"
 	"github.com/sensu/sensu-go/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -21,83 +20,23 @@ func TestGetNote(t *testing.T) {
 	assert.Contains(t, note, string(eventJSON))
 }
 
-func TestParseEventKeyTags(t *testing.T) {
-	event := types.FixtureEvent("foo", "bar")
-	_, err := json.Marshal(event)
-	assert.NoError(t, err)
-	title, tags := parseEventKeyTags(event)
-	assert.Contains(t, title, "foo")
-	assert.Contains(t, tags, "foo")
-}
-
-func TestParseAnnotations(t *testing.T) {
-	event := v2.Event{
-		Entity: &v2.Entity{
-			ObjectMeta: v2.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-				Annotations: map[string]string{
-					"documentation": "no-docs",
-				},
-			},
-		},
-		Check: &v2.Check{
-			ObjectMeta: v2.ObjectMeta{
-				Name: "test-check",
-				Annotations: map[string]string{
-					"playbook": "no-playbook",
-				},
-			},
-			Output: "test output",
-		},
-	}
-	// annotations := "documentation,playbook"
-	description, _ := parseAnnotations(&event)
-	assert.Contains(t, description, "documentation")
-	assert.Contains(t, description, "playbook")
-
-}
-
 func TestEventPriority(t *testing.T) {
-	event := v2.Event{
-		Entity: &v2.Entity{
-			ObjectMeta: v2.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-			},
-		},
-		Check: &v2.Check{
-			ObjectMeta: v2.ObjectMeta{
-				Name: "test-check",
-				Annotations: map[string]string{
-					"opsgenie_priority": "P1",
-				},
-			},
-			Output: "test output",
-		},
-	}
-	priority := eventPriority(&event)
+	plugin.Priority = "P1"
+	priority := eventPriority()
 	expectedValue := alert.P1
 	assert.Contains(t, priority, expectedValue)
 }
 
-func TestStringInSlice(t *testing.T) {
-	testSlice := []string{"foo", "bar", "test"}
-	testString := "test"
-	testResult := stringInSlice(testString, testSlice)
-	assert.True(t, testResult)
-}
-
 func TestParseActions(t *testing.T) {
-	event1 := v2.Event{
-		Entity: &v2.Entity{
-			ObjectMeta: v2.ObjectMeta{
+	event1 := types.Event{
+		Entity: &types.Entity{
+			ObjectMeta: types.ObjectMeta{
 				Name:      "test",
 				Namespace: "default",
 			},
 		},
-		Check: &v2.Check{
-			ObjectMeta: v2.ObjectMeta{
+		Check: &types.Check{
+			ObjectMeta: types.ObjectMeta{
 				Name: "test-check",
 				Annotations: map[string]string{
 					"opsgenie_priority": "P1",
@@ -111,15 +50,15 @@ func TestParseActions(t *testing.T) {
 	expectedValue1 := "workaround"
 	assert.Contains(t, test1, expectedValue1)
 
-	event2 := v2.Event{
-		Entity: &v2.Entity{
-			ObjectMeta: v2.ObjectMeta{
+	event2 := types.Event{
+		Entity: &types.Entity{
+			ObjectMeta: types.ObjectMeta{
 				Name:      "test",
 				Namespace: "default",
 			},
 		},
-		Check: &v2.Check{
-			ObjectMeta: v2.ObjectMeta{
+		Check: &types.Check{
+			ObjectMeta: types.ObjectMeta{
 				Name: "test-check",
 				Annotations: map[string]string{
 					"opsgenie_priority": "P1",
@@ -136,39 +75,6 @@ func TestParseActions(t *testing.T) {
 	assert.Contains(t, test2, expectedValue2a)
 }
 
-func TestParseAuthTokenAndTeams(t *testing.T) {
-	event1 := v2.Event{
-		Entity: &v2.Entity{
-			ObjectMeta: v2.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-			},
-		},
-		Check: &v2.Check{
-			ObjectMeta: v2.ObjectMeta{
-				Name: "test-check",
-				Annotations: map[string]string{
-					"opsgenie_priority":  "P1",
-					"opsgenie_authtoken": "aaaa-wwww-sssss-33333-zzzzz",
-					"opsgenie_team":      "ops",
-				},
-			},
-			Output: "test output",
-		},
-	}
-	allowOverride = true
-	testAuth1 := parseOpsgenieAuthToken(&event1)
-	expectedValueAuth1 := "aaaa-wwww-sssss-33333-zzzzz"
-	assert.Contains(t, testAuth1, expectedValueAuth1)
-	testTeams1 := parseOpsgenieTeams(&event1)
-	expectedValueTeams1 := []alert.Responder{
-		{Type: alert.EscalationResponder, Name: "ops"},
-		{Type: alert.ScheduleResponder, Name: "ops"},
-	}
-	assert.Equal(t, testTeams1, expectedValueTeams1)
-
-}
-
 func TestSwitchOpsgenieRegion(t *testing.T) {
 	expectedValueUS := client.API_URL
 	expectedValueEU := client.API_URL_EU
@@ -177,15 +83,68 @@ func TestSwitchOpsgenieRegion(t *testing.T) {
 
 	assert.Equal(t, testUS, expectedValueUS)
 
-	apiRegion = "eu"
+	plugin.APIRegion = "eu"
 
 	testEU := switchOpsgenieRegion()
 
 	assert.Equal(t, testEU, expectedValueEU)
 
-	apiRegion = "EU"
+	plugin.APIRegion = "EU"
 
 	testEU2 := switchOpsgenieRegion()
 
 	assert.Equal(t, testEU2, expectedValueEU)
+}
+
+func TestParseDetails(t *testing.T) {
+	event := types.FixtureEvent("foo", "bar")
+	event.Check.Output = "Check OK"
+	event.Check.State = "passing"
+	event.Check.Status = 0
+	_, err := json.Marshal(event)
+	assert.NoError(t, err)
+	plugin.FullDetails = true
+	det := parseDetails(event)
+	assert.Equal(t, det["output"], "Check OK")
+	assert.Equal(t, det["state"], "passing")
+	assert.Equal(t, det["status"], "0")
+}
+
+func TestParseEventKeyTags(t *testing.T) {
+	event := types.FixtureEvent("foo", "bar")
+	_, err := json.Marshal(event)
+	assert.NoError(t, err)
+	plugin.MessageTemplate = "{{.Entity.Name}}/{{.Check.Name}}"
+	plugin.MessageLimit = 100
+	title, alias, tags := parseEventKeyTags(event)
+	assert.Contains(t, title, "foo")
+	assert.Contains(t, alias, "foo")
+	assert.Contains(t, tags, "foo")
+}
+
+func TestParseDescription(t *testing.T) {
+	event := types.FixtureEvent("foo", "bar")
+	event.Check.Output = "Check OK"
+	_, err := json.Marshal(event)
+	assert.NoError(t, err)
+	plugin.DescriptionTemplate = "{{.Check.Output}}"
+	plugin.DescriptionLimit = 100
+	description := parseDescription(event)
+	assert.Equal(t, description, "Check OK")
+}
+
+func TestCheckArgs(t *testing.T) {
+	assert := assert.New(t)
+	event := types.FixtureEvent("entity1", "check1")
+	assert.Error(checkArgs(event))
+	plugin.AuthToken = "Testing"
+	assert.Error(checkArgs(event))
+	plugin.Team = "Testing"
+	assert.NoError(checkArgs(event))
+}
+
+func TestTrim(t *testing.T) {
+	testString := "This string is 33 characters long"
+	assert.Equal(t, trim(testString, 40), testString)
+	assert.Equal(t, trim(testString, 4), "This")
 }

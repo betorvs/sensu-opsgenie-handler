@@ -1,5 +1,5 @@
 {
-    "timestamp": 1585833731,
+    "timestamp": 1522100915,
     "entity": {
       "entity_class": "agent",
       "system": {
@@ -146,7 +146,7 @@
         "name": "sensu_ssl_certificates",
         "namespace": "default",
         "annotations": {
-          "opsgenie_priority": "P3",
+          "sensu.io/plugins/sensu-opsgenie-handler/config/priority": "P3",
           "documentation": "https://github.com/betorvs/sensu-opsgenie-handler"
         }
       }

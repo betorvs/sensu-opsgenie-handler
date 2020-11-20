@@ -145,7 +145,7 @@
         "name": "nodes-ready-k8s-prod",
         "namespace": "default",
         "annotations": {
-          "opsgenie_priority": "P2",
+          "sensu.io/plugins/sensu-opsgenie-handler/config/priority": "P2",
           "documentation": "https://kubernetes.io"
         }
       }
