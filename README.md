@@ -1,5 +1,5 @@
 # Sensu Go OpsGenie Handler
-![Go Test](![Go Test](https://github.com/betorvs/sensu-opsgenie-handler/workflows/Go%20Test/badge.svg))
+![Go Test](https://github.com/betorvs/sensu-opsgenie-handler/workflows/Go%20Test/badge.svg)
 [![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/betorvs/sensu-opsgenie-handler)
 
 The Sensu Go OpsGenie Handler is a [Sensu Event Handler][3] which manages
