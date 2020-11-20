@@ -1,5 +1,5 @@
 # Sensu Go OpsGenie Handler
-TravisCI: [![TravisCI Build Status](https://travis-ci.org/betorvs/sensu-opsgenie-handler.svg?branch=master)](https://travis-ci.org/betorvs/sensu-opsgenie-handler)
+![Go Test](![Go Test](https://github.com/betorvs/sensu-opsgenie-handler/workflows/Go%20Test/badge.svg))
 [![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/betorvs/sensu-opsgenie-handler)
 
 The Sensu Go OpsGenie Handler is a [Sensu Event Handler][3] which manages
@@ -74,7 +74,6 @@ metadata:
   namespace: default
   annotations:
     sensu.io/plugins/sensu-opsgenie-handler/config/priority: P2
-    documentation: https://docs.sensu.io/sensu-go/latest
 spec:
   command: check-http -u http://localhost:8080/healthz
   subscriptions:
