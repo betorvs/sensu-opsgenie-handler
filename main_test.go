@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	alerts "github.com/opsgenie/opsgenie-go-sdk/alertsv2"
-	v2 "github.com/sensu/sensu-go/api/core/v2"
+	"github.com/opsgenie/opsgenie-go-sdk-v2/alert"
+	"github.com/opsgenie/opsgenie-go-sdk-v2/client"
 	"github.com/sensu/sensu-go/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,69 +20,131 @@ func TestGetNote(t *testing.T) {
 	assert.Contains(t, note, string(eventJSON))
 }
 
+func TestEventPriority(t *testing.T) {
+	plugin.Priority = "P1"
+	priority := eventPriority()
+	expectedValue := alert.P1
+	assert.Contains(t, priority, expectedValue)
+}
+
+func TestParseActions(t *testing.T) {
+	event1 := types.Event{
+		Entity: &types.Entity{
+			ObjectMeta: types.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+		},
+		Check: &types.Check{
+			ObjectMeta: types.ObjectMeta{
+				Name: "test-check",
+				Annotations: map[string]string{
+					"opsgenie_priority": "P1",
+					"opsgenie_actions":  "workaround",
+				},
+			},
+			Output: "test output",
+		},
+	}
+	test1 := parseActions(&event1)
+	expectedValue1 := "workaround"
+	assert.Contains(t, test1, expectedValue1)
+
+	event2 := types.Event{
+		Entity: &types.Entity{
+			ObjectMeta: types.ObjectMeta{
+				Name:      "test",
+				Namespace: "default",
+			},
+		},
+		Check: &types.Check{
+			ObjectMeta: types.ObjectMeta{
+				Name: "test-check",
+				Annotations: map[string]string{
+					"opsgenie_priority": "P1",
+					"opsgenie_actions":  "workaround,bigrestart",
+				},
+			},
+			Output: "test output",
+		},
+	}
+	test2 := parseActions(&event2)
+	expectedValue2 := "workaround"
+	assert.Contains(t, test2, expectedValue2)
+	expectedValue2a := "bigrestart"
+	assert.Contains(t, test2, expectedValue2a)
+}
+
+func TestSwitchOpsgenieRegion(t *testing.T) {
+	expectedValueUS := client.API_URL
+	expectedValueEU := client.API_URL_EU
+
+	testUS := switchOpsgenieRegion()
+
+	assert.Equal(t, testUS, expectedValueUS)
+
+	plugin.APIRegion = "eu"
+
+	testEU := switchOpsgenieRegion()
+
+	assert.Equal(t, testEU, expectedValueEU)
+
+	plugin.APIRegion = "EU"
+
+	testEU2 := switchOpsgenieRegion()
+
+	assert.Equal(t, testEU2, expectedValueEU)
+}
+
+func TestParseDetails(t *testing.T) {
+	event := types.FixtureEvent("foo", "bar")
+	event.Check.Output = "Check OK"
+	event.Check.State = "passing"
+	event.Check.Status = 0
+	_, err := json.Marshal(event)
+	assert.NoError(t, err)
+	plugin.FullDetails = true
+	det := parseDetails(event)
+	assert.Equal(t, det["output"], "Check OK")
+	assert.Equal(t, det["state"], "passing")
+	assert.Equal(t, det["status"], "0")
+}
+
 func TestParseEventKeyTags(t *testing.T) {
 	event := types.FixtureEvent("foo", "bar")
 	_, err := json.Marshal(event)
 	assert.NoError(t, err)
-	title, tags := parseEventKeyTags(event)
+	plugin.MessageTemplate = "{{.Entity.Name}}/{{.Check.Name}}"
+	plugin.MessageLimit = 100
+	title, alias, tags := parseEventKeyTags(event)
 	assert.Contains(t, title, "foo")
+	assert.Contains(t, alias, "foo")
 	assert.Contains(t, tags, "foo")
 }
 
-func TestParseAnnotations(t *testing.T) {
-	event := v2.Event{
-		Entity: &v2.Entity{
-			ObjectMeta: v2.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-				Annotations: map[string]string{
-					"documentation": "no-docs",
-				},
-			},
-		},
-		Check: &v2.Check{
-			ObjectMeta: v2.ObjectMeta{
-				Name: "test-check",
-				Annotations: map[string]string{
-					"playbook": "no-playbook",
-				},
-			},
-			Output: "test output",
-		},
-	}
-	// annotations := "documentation,playbook"
-	description := parseAnnotations(&event)
-	assert.Contains(t, description, "documentation")
-	assert.Contains(t, description, "playbook")
-
+func TestParseDescription(t *testing.T) {
+	event := types.FixtureEvent("foo", "bar")
+	event.Check.Output = "Check OK"
+	_, err := json.Marshal(event)
+	assert.NoError(t, err)
+	plugin.DescriptionTemplate = "{{.Check.Output}}"
+	plugin.DescriptionLimit = 100
+	description := parseDescription(event)
+	assert.Equal(t, description, "Check OK")
 }
 
-func TestEventPriority(t *testing.T) {
-	event := v2.Event{
-		Entity: &v2.Entity{
-			ObjectMeta: v2.ObjectMeta{
-				Name:      "test",
-				Namespace: "default",
-			},
-		},
-		Check: &v2.Check{
-			ObjectMeta: v2.ObjectMeta{
-				Name: "test-check",
-				Annotations: map[string]string{
-					"opsgenie_priority": "P1",
-				},
-			},
-			Output: "test output",
-		},
-	}
-	priority := eventPriority(&event)
-	expectedValue := alerts.P1
-	assert.Contains(t, priority, expectedValue)
+func TestCheckArgs(t *testing.T) {
+	assert := assert.New(t)
+	event := types.FixtureEvent("entity1", "check1")
+	assert.Error(checkArgs(event))
+	plugin.AuthToken = "Testing"
+	assert.Error(checkArgs(event))
+	plugin.Team = "Testing"
+	assert.NoError(checkArgs(event))
 }
 
-func TestStringInSlice(t *testing.T) {
-	testSlice := []string{"foo", "bar", "test"}
-	testString := "test"
-	testResult := stringInSlice(testString, testSlice)
-	assert.True(t, testResult)
+func TestTrim(t *testing.T) {
+	testString := "This string is 33 characters long"
+	assert.Equal(t, trim(testString, 40), testString)
+	assert.Equal(t, trim(testString, 4), "This")
 }

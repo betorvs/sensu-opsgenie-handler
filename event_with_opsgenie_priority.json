@@ -1,8 +1,10 @@
 {
+  "timestamp": 1522100915,
   "entity": {
     "entity_class": "agent",
+    "sensu_agent_version": "5.17.2",
     "system": {
-      "hostname": "webserver01",
+      "hostname": "webserver04",
       "os": "linux",
       "platform": "centos",
       "platform_family": "rhel",
@@ -38,7 +40,7 @@
     },
     "subscriptions": [
       "testing",
-      "entity:webserver01"
+      "entity:webserver04"
     ],
     "last_seen": 1542667635,
     "deregister": false,
@@ -56,11 +58,12 @@
       "secret"
     ],
     "metadata": {
-      "name": "webserver01",
+      "name": "webserver04",
       "namespace": "default",
       "labels": null,
       "annotations": {
-        "opsgenie_priority": "P2"
+        "sensu.io/plugins/sensu-opsgenie-handler/config/priority": "P2",
+        "documentation": "http://golang.org"
       }
     }
   },

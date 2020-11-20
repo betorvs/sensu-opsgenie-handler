@@ -1,0 +1,157 @@
+{
+    "timestamp": 1585743607,
+    "entity": {
+      "entity_class": "proxy",
+      "system": {
+        "network": {
+          "interfaces": null
+        }
+      },
+      "subscriptions": [
+        "entity:k8s.example.com",
+        "entity:k8s.example.com"
+      ],
+      "last_seen": 0,
+      "deregister": false,
+      "deregistration": {},
+      "metadata": {
+        "name": "k8s.example.com",
+        "namespace": "default"
+      }
+    },
+    "check": {
+      "command": "check-kube-nodes-ready.rb -s https://api.k8s.example.com -t \"$(cat /etc/prod-agent/token)\"",
+      "handlers": [
+        "default"
+      ],
+      "high_flap_threshold": 0,
+      "interval": 60,
+      "low_flap_threshold": 0,
+      "publish": true,
+      "runtime_assets": [
+        "sensu-ruby-runtime",
+        "sensu-plugins-kubernetes"
+      ],
+      "subscriptions": [
+        "kubernetes-services"
+      ],
+      "proxy_entity_name": "k8s.example.com",
+      "check_hooks": null,
+      "stdin": false,
+      "subdue": null,
+      "ttl": 0,
+      "timeout": 0,
+      "round_robin": false,
+      "duration": 0.568769001,
+      "executed": 1585743606,
+      "history": [
+        {
+          "status": 0,
+          "executed": 1585742406
+        },
+        {
+          "status": 0,
+          "executed": 1585742466
+        },
+        {
+          "status": 0,
+          "executed": 1585742526
+        },
+        {
+          "status": 0,
+          "executed": 1585742586
+        },
+        {
+          "status": 0,
+          "executed": 1585742646
+        },
+        {
+          "status": 0,
+          "executed": 1585742706
+        },
+        {
+          "status": 0,
+          "executed": 1585742766
+        },
+        {
+          "status": 0,
+          "executed": 1585742826
+        },
+        {
+          "status": 0,
+          "executed": 1585742886
+        },
+        {
+          "status": 0,
+          "executed": 1585742946
+        },
+        {
+          "status": 0,
+          "executed": 1585743006
+        },
+        {
+          "status": 0,
+          "executed": 1585743066
+        },
+        {
+          "status": 0,
+          "executed": 1585743126
+        },
+        {
+          "status": 0,
+          "executed": 1585743186
+        },
+        {
+          "status": 0,
+          "executed": 1585743246
+        },
+        {
+          "status": 0,
+          "executed": 1585743306
+        },
+        {
+          "status": 0,
+          "executed": 1585743366
+        },
+        {
+          "status": 0,
+          "executed": 1585743426
+        },
+        {
+          "status": 0,
+          "executed": 1585743486
+        },
+        {
+          "status": 0,
+          "executed": 1585743546
+        },
+        {
+          "status": 2,
+          "executed": 1585743606
+        }
+      ],
+      "issued": 1585743606,
+      "output": "AllNodesAreReady OK: All nodes are reporting as ready\n",
+      "state": "passing",
+      "status": 0,
+      "total_state_change": 5,
+      "last_ok": 1585743546,
+      "occurrences": 1,
+      "occurrences_watermark": 1,
+      "output_metric_format": "",
+      "output_metric_handlers": null,
+      "env_vars": null,
+      "metadata": {
+        "name": "nodes-ready-k8s-prod",
+        "namespace": "default",
+        "annotations": {
+          "sensu.io/plugins/sensu-opsgenie-handler/config/priority": "P2",
+          "documentation": "https://kubernetes.io"
+        }
+      }
+    },
+    "metadata": {
+      "namespace": "default"
+    }
+  }
+  

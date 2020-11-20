@@ -17,3 +17,6 @@ vendor/
 # deploy
 bonsai/
 dist/
+bin/
+
+sensu-opsgenie-handler
