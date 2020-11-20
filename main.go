@@ -337,6 +337,7 @@ func executeHandler(event *types.Event) error {
 	}
 	// check if event has a alert
 	hasAlert, _ := getAlert(alertClient, event)
+
 	// close incident if status == 0
 	if hasAlert != notFound && event.Check.Status == 0 {
 		return closeAlert(alertClient, event, hasAlert)
