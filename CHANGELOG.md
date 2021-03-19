@@ -7,7 +7,12 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [1.0.1] - 2021-03-19
+### Added
+- flag `--titlePrettify` to apply strings.Title in message title and remove these characters -, /, \
 
+### Changed
+- update golang to 1.15
 
 ## [1.0.0] - 2020-11-20
 
