@@ -148,3 +148,14 @@ func TestTrim(t *testing.T) {
 	assert.Equal(t, trim(testString, 40), testString)
 	assert.Equal(t, trim(testString, 4), "This")
 }
+
+func TestTitlePrettify(t *testing.T) {
+	test1 := "long-check-with-too-many-dashes"
+	res1 := titlePrettify(test1)
+	val1 := "Long Check With Too Many Dashes"
+	assert.Equal(t, val1, res1)
+	test2 := "long-check-with-too-many-dashes/and/slashes-and\\others"
+	res2 := titlePrettify(test2)
+	val2 := "Long Check With Too Many Dashes And Slashes And Others"
+	assert.Equal(t, val2, res2)
+}

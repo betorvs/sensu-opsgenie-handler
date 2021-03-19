@@ -110,11 +110,13 @@ Flags:
   -p, --priority string              The OpsGenie Alert Priority, use default from OPSGENIE_PRIORITY env var (default "P3")
   -r, --region string                The OpsGenie API Region (us or eu), use default from OPSGENIE_REGION env var (default "us")
   -s, --sensuDashboard string        The OpsGenie Handler will use it to create a source Sensu Dashboard URL. Use OPSGENIE_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n (default "disabled")
-  -t, --team string                  The OpsGenie Team, use default from OPSGENIE_TEAM env var (default "sre")
+  -t, --team string                  The OpsGenie Team, use default from OPSGENIE_TEAM env var
+  -T, --titlePrettify                Remove all -, /, \ and apply strings.Title in message title
   -w, --withAnnotations              Include the event.metadata.Annotations in details to send to OpsGenie
   -W, --withLabels                   Include the event.metadata.Labels in details to send to OpsGenie
 
 Use "sensu-opsgenie-handler [command] --help" for more information about a command.
+
 ```
 
 **Note:** Make sure to set the `OPSGENIE_AUTHTOKEN` environment variable for sensitive credentials in production to prevent leaking into system process table. Please remember command arguments can be viewed by unprivileged users using commands such as `ps` or `top`. The `--auth` argument is provided as an override primarily for testing purposes. 

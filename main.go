@@ -36,6 +36,7 @@ type Config struct {
 	WithAnnotations     bool
 	WithLabels          bool
 	FullDetails         bool
+	TitlePrettify       bool
 }
 
 var (
@@ -129,6 +130,15 @@ var (
 			Default:   15000,
 			Usage:     "The maximum length of the description field",
 			Value:     &plugin.DescriptionLimit,
+		},
+		{
+			Path:      "titlePrettify",
+			Env:       "",
+			Argument:  "titlePrettify",
+			Shorthand: "T",
+			Default:   false,
+			Usage:     "Remove all -, /, \\ and apply strings.Title in message title",
+			Value:     &plugin.TitlePrettify,
 		},
 		{
 			Path:      "includeEventInNote",
@@ -227,6 +237,10 @@ func parseEventKeyTags(event *types.Event) (title string, alias string, tags []s
 		return "", "", []string{}
 	}
 	tags = append(tags, event.Entity.Name, event.Check.Name, event.Entity.Namespace, event.Entity.EntityClass)
+	if plugin.TitlePrettify {
+		newTitle := titlePrettify(title)
+		return trim(newTitle, plugin.MessageLimit), alias, tags
+	}
 	return trim(title, plugin.MessageLimit), alias, tags
 }
 
@@ -442,4 +456,13 @@ func trim(s string, n int) string {
 		return s[:n]
 	}
 	return s
+}
+
+func titlePrettify(s string) string {
+	var title string
+	title = strings.ReplaceAll(s, "-", " ")
+	title = strings.ReplaceAll(title, "\\", " ")
+	title = strings.ReplaceAll(title, "/", " ")
+	title = strings.Title(title)
+	return title
 }

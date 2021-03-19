@@ -1,6 +1,6 @@
 module github.com/betorvs/sensu-opsgenie-handler
 
-go 1.14
+go 1.15
 
 require (
 	github.com/fatih/color v1.10.0 // indirect
