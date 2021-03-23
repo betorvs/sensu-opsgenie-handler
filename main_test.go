@@ -138,8 +138,6 @@ func TestCheckArgs(t *testing.T) {
 	event := types.FixtureEvent("entity1", "check1")
 	assert.Error(checkArgs(event))
 	plugin.AuthToken = "Testing"
-	assert.Error(checkArgs(event))
-	plugin.Team = "Testing"
 	assert.NoError(checkArgs(event))
 }
 
