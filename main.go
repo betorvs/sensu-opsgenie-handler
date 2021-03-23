@@ -26,6 +26,8 @@ type Config struct {
 	AuthToken           string
 	APIRegion           string
 	Team                string
+	EscalationTeam      string
+	ScheduleTeam        string
 	Priority            string
 	SensuDashboard      string
 	MessageTemplate     string
@@ -76,6 +78,24 @@ var (
 			Default:   "",
 			Usage:     "The OpsGenie Team, use default from OPSGENIE_TEAM env var",
 			Value:     &plugin.Team,
+		},
+		{
+			Path:      "escalation-team",
+			Env:       "OPSGENIE_ESCALATION_TEAM",
+			Argument:  "escalation-team",
+			Shorthand: "",
+			Default:   "",
+			Usage:     "The OpsGenie Escalation Responders Team, use default from OPSGENIE_ESCALATION_TEAM env var",
+			Value:     &plugin.EscalationTeam,
+		},
+		{
+			Path:      "schedule-team",
+			Env:       "OPSGENIE_SCHEDULE_TEAM",
+			Argument:  "schedule-team",
+			Shorthand: "",
+			Default:   "",
+			Usage:     "The OpsGenie Schedule Responders Team, use default from OPSGENIE_SCHEDULE_TEAM env var",
+			Value:     &plugin.ScheduleTeam,
 		},
 		{
 			Path:      "priority",
@@ -188,9 +208,9 @@ func checkArgs(_ *types.Event) error {
 	if len(plugin.AuthToken) == 0 {
 		return fmt.Errorf("authentication token is empty")
 	}
-	if len(plugin.Team) == 0 {
-		return fmt.Errorf("team is empty")
-	}
+	// if len(plugin.Team) == 0 {
+	// 	return fmt.Errorf("team is empty")
+	// }
 	return nil
 }
 
@@ -374,9 +394,24 @@ func createIncident(alertClient *alert.Client, event *types.Event) error {
 		}
 	}
 
-	teams := []alert.Responder{
-		{Type: alert.EscalationResponder, Name: plugin.Team},
-		{Type: alert.ScheduleResponder, Name: plugin.Team},
+	teams := []alert.Responder{}
+	if plugin.EscalationTeam != "" {
+		escalation := []alert.Responder{
+			{Type: alert.EscalationResponder, Name: plugin.EscalationTeam},
+		}
+		teams = append(teams, escalation...)
+	}
+	if plugin.ScheduleTeam != "" {
+		schedule := []alert.Responder{
+			{Type: alert.ScheduleResponder, Name: plugin.ScheduleTeam},
+		}
+		teams = append(teams, schedule...)
+	}
+	if plugin.Team != "" {
+		team := []alert.Responder{
+			{Type: alert.TeamResponder, Name: plugin.Team},
+		}
+		teams = append(teams, team...)
 	}
 
 	title, alias, tags := parseEventKeyTags(event)

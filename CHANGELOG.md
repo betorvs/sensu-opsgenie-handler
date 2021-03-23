@@ -7,6 +7,13 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [1.0.2] - 2021-03-23
+### Changed
+- flag `--team` is not required anymore.
+
+### Added
+- flags `--schedule-team` and `--escalation-team` to add Responders field more correctly. From Opsgenie documentation ` If the API Key belongs to a team integration, this field will be overwritten with the owner team. ` [opsgenie api docs](https://docs.opsgenie.com/docs/alert-api#create-alert)
+
 ## [1.0.1] - 2021-03-19
 ### Added
 - flag `--titlePrettify` to apply strings.Title in message title and remove these characters -, /, \

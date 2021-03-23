@@ -102,6 +102,7 @@ Flags:
   -a, --auth string                  The OpsGenie API authentication token, use default from OPSGENIE_AUTHTOKEN env var
   -L, --descriptionLimit int         The maximum length of the description field (default 15000)
   -d, --descriptionTemplate string   The template for the description to be sent (default "{{.Check.Output}}")
+      --escalation-team string       The OpsGenie Escalation Responders Team, use default from OPSGENIE_ESCALATION_TEAM env var
   -F, --fullDetails                  Include the more details to send to OpsGenie like proxy_entity_name, occurrences and agent details arch and os
   -h, --help                         help for sensu-opsgenie-handler
   -i, --includeEventInNote           Include the event JSON in the payload sent to OpsGenie
@@ -109,6 +110,7 @@ Flags:
   -m, --messageTemplate string       The template for the message to be sent (default "{{.Entity.Name}}/{{.Check.Name}}")
   -p, --priority string              The OpsGenie Alert Priority, use default from OPSGENIE_PRIORITY env var (default "P3")
   -r, --region string                The OpsGenie API Region (us or eu), use default from OPSGENIE_REGION env var (default "us")
+      --schedule-team string         The OpsGenie Schedule Responders Team, use default from OPSGENIE_SCHEDULE_TEAM env var
   -s, --sensuDashboard string        The OpsGenie Handler will use it to create a source Sensu Dashboard URL. Use OPSGENIE_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n (default "disabled")
   -t, --team string                  The OpsGenie Team, use default from OPSGENIE_TEAM env var
   -T, --titlePrettify                Remove all -, /, \ and apply strings.Title in message title
