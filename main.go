@@ -38,6 +38,7 @@ type Config struct {
 	WithAnnotations     bool
 	WithLabels          bool
 	FullDetails         bool
+	HooksDetails        bool
 	TitlePrettify       bool
 }
 
@@ -196,6 +197,15 @@ var (
 			Usage:     "Include the more details to send to OpsGenie like proxy_entity_name, occurrences and agent details arch and os",
 			Value:     &plugin.FullDetails,
 		},
+		{
+			Path:      "addHooksToDetails",
+			Env:       "",
+			Argument:  "addHooksToDetails",
+			Shorthand: "",
+			Default:   false,
+			Usage:     "Include the checks.hooks in details to send to OpsGenie",
+			Value:     &plugin.HooksDetails,
+		},
 	}
 )
 
@@ -298,6 +308,27 @@ func parseDetails(event *types.Event) map[string]string {
 			details["platform"] = event.Entity.System.GetPlatform()
 			details["platform_family"] = event.Entity.System.GetPlatformFamily()
 			details["platform_version"] = event.Entity.System.GetPlatformVersion()
+		}
+	}
+	if plugin.HooksDetails {
+		if len(event.Check.Hooks) != 0 {
+			for k, v := range event.Check.Hooks {
+				detailNameLabel := fmt.Sprintf("hooks_%v_%s_label", k, v.Name)
+				detailNameCommand := fmt.Sprintf("hooks_%v_%s_command", k, v.Name)
+				detailNameOutput := fmt.Sprintf("hooks_%v_%s_output", k, v.Name)
+				if v.Labels != nil {
+					for key, value := range v.Labels {
+						label := fmt.Sprintf("%s_%s", detailNameLabel, key)
+						details[label] = value
+					}
+				}
+				if v.Command != "" {
+					details[detailNameCommand] = v.Command
+				}
+				if v.Output != "" {
+					details[detailNameOutput] = v.Output
+				}
+			}
 		}
 	}
 	// only if true

@@ -13,6 +13,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Added
 - flags `--schedule-team` and `--escalation-team` to add Responders field more correctly. From Opsgenie documentation ` If the API Key belongs to a team integration, this field will be overwritten with the owner team. ` [opsgenie api docs](https://docs.opsgenie.com/docs/alert-api#create-alert)
+- flag `--addHooksToDetails` to add event.check.hooks.[].labels, event.check.hooks.[].command and event.check.hooks.[].output using event.check.hooks.[].name as key.
 
 ## [1.0.1] - 2021-03-19
 ### Added
