@@ -632,28 +632,31 @@ func titlePrettify(s string) string {
 func updateAlert(alertClient *alert.Client, notes string, alertid string, details map[string]string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	updateAlert := new(alert.AsyncAlertResult)
-	var err error
 	if len(details) != 0 {
-		updateAlert, err = alertClient.AddDetails(ctx, &alert.AddDetailsRequest{
+		// update with details and sensu source url
+		updateAlert, err := alertClient.AddDetails(ctx, &alert.AddDetailsRequest{
 			IdentifierType:  alert.ALERTID,
 			IdentifierValue: alertid,
 			Source:          source,
 			Note:            notes,
 			Details:         details,
 		})
+		if err != nil {
+			fmt.Printf("Not updated: %s \n", err)
+		}
+		fmt.Printf("RequestID with details %s to update %s \n", alertid, updateAlert.RequestId)
 	} else {
-		updateAlert, err = alertClient.AddNote(ctx, &alert.AddNoteRequest{
+		// update without details and just add check.output to notes
+		updateAlert, err := alertClient.AddNote(ctx, &alert.AddNoteRequest{
 			IdentifierType:  alert.ALERTID,
 			IdentifierValue: alertid,
 			Source:          source,
 			Note:            notes,
 		})
+		if err != nil {
+			fmt.Printf("Not updated: %s \n", err)
+		}
+		fmt.Printf("RequestID %s to update %s \n", alertid, updateAlert.RequestId)
 	}
-	if err != nil {
-		fmt.Printf("Not updated: %s \n", err)
-	}
-	fmt.Printf("RequestID %s to update %s \n", alertid, updateAlert.RequestId)
-
 	return nil
 }
