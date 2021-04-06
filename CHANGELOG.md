@@ -7,6 +7,12 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [1.0.3] - 2021-04-01
+### Added
+- flag `--tagTemplate` based on fork from [nixwiz](https://github.com/nixwiz/sensu-opsgenie-handler/commit/73208fff8c51234814758e8aafed114751daeff9). Remove short option due conflict with titlePrettify flag.
+- flag `--visibility-teams` to add list of teams that alert will be visible in Opsgenie. It's not working properly but we have an issue open in [opsgenie-sdk-v2](https://github.com/opsgenie/opsgenie-go-sdk-v2/issues/81)
+- add new flags `--remediation-events` and `--remediation-event-alias` to change how to use this plugin and send check.output from a remediation check to origin alert using a configured alias.
+
 ## [1.0.2] - 2021-03-23
 ### Changed
 - flag `--team` is not required anymore.

@@ -99,24 +99,28 @@ Available Commands:
   version     Print the version number of this plugin
 
 Flags:
-      --addHooksToDetails            Include the checks.hooks in details to send to OpsGenie
-  -a, --auth string                  The OpsGenie API authentication token, use default from OPSGENIE_AUTHTOKEN env var
-  -L, --descriptionLimit int         The maximum length of the description field (default 15000)
-  -d, --descriptionTemplate string   The template for the description to be sent (default "{{.Check.Output}}")
-      --escalation-team string       The OpsGenie Escalation Responders Team, use default from OPSGENIE_ESCALATION_TEAM env var
-  -F, --fullDetails                  Include the more details to send to OpsGenie like proxy_entity_name, occurrences and agent details arch and os
-  -h, --help                         help for sensu-opsgenie-handler
-  -i, --includeEventInNote           Include the event JSON in the payload sent to OpsGenie
-  -l, --messageLimit int             The maximum length of the message field (default 130)
-  -m, --messageTemplate string       The template for the message to be sent (default "{{.Entity.Name}}/{{.Check.Name}}")
-  -p, --priority string              The OpsGenie Alert Priority, use default from OPSGENIE_PRIORITY env var (default "P3")
-  -r, --region string                The OpsGenie API Region (us or eu), use default from OPSGENIE_REGION env var (default "us")
-      --schedule-team string         The OpsGenie Schedule Responders Team, use default from OPSGENIE_SCHEDULE_TEAM env var
-  -s, --sensuDashboard string        The OpsGenie Handler will use it to create a source Sensu Dashboard URL. Use OPSGENIE_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n (default "disabled")
-  -t, --team string                  The OpsGenie Team, use default from OPSGENIE_TEAM env var
-  -T, --titlePrettify                Remove all -, /, \ and apply strings.Title in message title
-  -w, --withAnnotations              Include the event.metadata.Annotations in details to send to OpsGenie
-  -W, --withLabels                   Include the event.metadata.Labels in details to send to OpsGenie
+      --addHooksToDetails                Include the checks.hooks in details to send to OpsGenie
+  -a, --auth string                      The OpsGenie API authentication token, use default from OPSGENIE_AUTHTOKEN env var
+  -L, --descriptionLimit int             The maximum length of the description field (default 15000)
+  -d, --descriptionTemplate string       The template for the description to be sent (default "{{.Check.Output}}")
+      --escalation-team string           The OpsGenie Escalation Responders Team, use default from OPSGENIE_ESCALATION_TEAM env var
+  -F, --fullDetails                      Include the more details to send to OpsGenie like proxy_entity_name, occurrences and agent details arch and os
+  -h, --help                             help for sensu-opsgenie-handler
+  -i, --includeEventInNote               Include the event JSON in the payload sent to OpsGenie
+  -l, --messageLimit int                 The maximum length of the message field (default 130)
+  -m, --messageTemplate string           The template for the message to be sent (default "{{.Entity.Name}}/{{.Check.Name}}")
+  -p, --priority string                  The OpsGenie Alert Priority, use default from OPSGENIE_PRIORITY env var (default "P3")
+  -r, --region string                    The OpsGenie API Region (us or eu), use default from OPSGENIE_REGION env var (default "us")
+      --remediation-event-alias string   Replace opsgenie alias with this value and add only output as node in opsgenie. Should be used with auto remediation checks
+      --remediation-events               Enable Remediation Events to send check.output to opsgenie using alert alias from remediation-event-alias configuration
+      --schedule-team string             The OpsGenie Schedule Responders Team, use default from OPSGENIE_SCHEDULE_TEAM env var
+  -s, --sensuDashboard string            The OpsGenie Handler will use it to create a source Sensu Dashboard URL. Use OPSGENIE_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n (default "disabled")
+      --tagTemplate strings              The template to assign for the incident in OpsGenie (default [{{.Entity.Name}},{{.Check.Name}},{{.Entity.Namespace}},{{.Entity.EntityClass}}])
+  -t, --team string                      The OpsGenie Team, use default from OPSGENIE_TEAM env var
+  -T, --titlePrettify                    Remove all -, /, \ and apply strings.Title in message title
+      --visibility-teams string          The OpsGenie Visibility Responders Team, use default from OPSGENIE_VISIBILITY_TEAMS env var: sre,ops (splitted by commas)
+  -w, --withAnnotations                  Include the event.metadata.Annotations in details to send to OpsGenie
+  -W, --withLabels                       Include the event.metadata.Labels in details to send to OpsGenie
 
 Use "sensu-opsgenie-handler [command] --help" for more information about a command.
 
@@ -185,6 +189,57 @@ sensuctl asset add betorvs/sensu-opsgenie-handler --rename sensu-opsgenie-handle
 
 See `sensuctl asset --help` for details on how to specify version.
 
+## Additional notes
+
+Flags: `--remediation-events` and `--remediation-event-alias`. More info about [remediation][11].
+
+Proposed Workflow:
+
+1. Entity -> Check_Http -> opsgenie, remediation handlers
+2. Remediation handler -> Run Check_Http_remediation to Entity 
+3. Entity -> Check_Http_remediation -> opsgenie_remediation handler
+
+In opsgenige original alert Check_Http we will find a note with Check_Http_remediation.Check.Output and a detail with name `remediation_CHECK-NAME_source` with sensu url if `--sensuDashboard` flag was configured.
+
+In check definition :
+```yml
+---
+type: CheckConfig
+api_version: core/v2
+metadata:
+  name: Check_Http_remediation
+  namespace: default
+  annotations:
+    sensu.io/plugins/sensu-opsgenie-handler/config/remediation-event-alias: "entity/Check_Http"
+spec:
+  command: collect_smart_evidences.sh
+  subscriptions:
+  - system
+  handlers:
+  - opsgenie_remediation
+  interval: 60
+  publish: false
+```
+
+And Handler:
+```yml
+type: Handler
+api_version: core/v2
+metadata:
+  name: opsgenie_remediation
+  namespace: default
+spec:
+  type: pipe
+  command: sensu-opsgenie-handler --remediation-events -s https://sensu-dashboard.example.com/c/~/n
+  env_vars:
+  - OPSGENIE_REGION=us
+  timeout: 10
+  runtime_assets:
+  - betorvs/sensu-opsgenie-handler
+  filters: null
+```
+
+More ideas about remediation try this [plugin][12].
 
 ## Contributing
 
@@ -200,3 +255,5 @@ See https://github.com/sensu/sensu-go/blob/master/CONTRIBUTING.md
 [8]: https://github.com/opsgenie/opsgenie-go-sdk-v2
 [9]: https://docs.sensu.io/sensu-go/latest/guides/secrets-management/
 [10]: https://docs.sensu.io/sensu-go/latest/guides/secrets-management/#use-env-for-secrets-management
+[11]: https://github.com/sensu/sensu-remediation-handler
+[12]: https://github.com/betorvs/sensu-dynamic-check-mutator

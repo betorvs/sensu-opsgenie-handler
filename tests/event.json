@@ -117,7 +117,9 @@
       "name": "check-nginx",
       "namespace": "default",
       "labels": null,
-      "annotations": null
+      "annotations": {
+        "sensu.io/plugins/sensu-opsgenie-handler/config/priority": "P5"
+      }
     }
   }
 }

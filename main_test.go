@@ -116,6 +116,7 @@ func TestParseEventKeyTags(t *testing.T) {
 	assert.NoError(t, err)
 	plugin.MessageTemplate = "{{.Entity.Name}}/{{.Check.Name}}"
 	plugin.MessageLimit = 100
+	plugin.TagsTemplates = []string{"{{.Entity.Name}}", "{{.Check.Name}}", "{{.Entity.Namespace}}", "{{.Entity.EntityClass}}"}
 	title, alias, tags := parseEventKeyTags(event)
 	assert.Contains(t, title, "foo")
 	assert.Contains(t, alias, "foo")
@@ -156,4 +157,22 @@ func TestTitlePrettify(t *testing.T) {
 	res2 := titlePrettify(test2)
 	val2 := "Long Check With Too Many Dashes And Slashes And Others"
 	assert.Equal(t, val2, res2)
+}
+
+func TestRespondersTeam(t *testing.T) {
+	test1 := []alert.Responder{
+		{Type: alert.TeamResponder, Name: "ops"},
+	}
+	plugin.Team = "ops"
+	res1 := respondersTeam()
+	assert.Equal(t, res1, test1)
+}
+
+func TestVisibilityTeams(t *testing.T) {
+	test1 := []alert.Responder{
+		{Type: alert.TeamResponder, Name: "ops"},
+	}
+	plugin.VisibilityTeams = "ops,"
+	res1 := visibilityTeams()
+	assert.Equal(t, res1, test1)
 }

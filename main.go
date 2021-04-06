@@ -23,23 +23,27 @@ const (
 // Config represents the handler plugin config.
 type Config struct {
 	sensu.PluginConfig
-	AuthToken           string
-	APIRegion           string
-	Team                string
-	EscalationTeam      string
-	ScheduleTeam        string
-	Priority            string
-	SensuDashboard      string
-	MessageTemplate     string
-	MessageLimit        int
-	DescriptionTemplate string
-	DescriptionLimit    int
-	IncludeEventInNote  bool
-	WithAnnotations     bool
-	WithLabels          bool
-	FullDetails         bool
-	HooksDetails        bool
-	TitlePrettify       bool
+	AuthToken             string
+	APIRegion             string
+	Team                  string
+	EscalationTeam        string
+	ScheduleTeam          string
+	VisibilityTeams       string
+	Priority              string
+	SensuDashboard        string
+	MessageTemplate       string
+	MessageLimit          int
+	DescriptionTemplate   string
+	DescriptionLimit      int
+	IncludeEventInNote    bool
+	WithAnnotations       bool
+	WithLabels            bool
+	FullDetails           bool
+	HooksDetails          bool
+	TitlePrettify         bool
+	TagsTemplates         []string
+	RemediationEvents     bool
+	RemediationEventAlias string
 }
 
 var (
@@ -97,6 +101,15 @@ var (
 			Default:   "",
 			Usage:     "The OpsGenie Schedule Responders Team, use default from OPSGENIE_SCHEDULE_TEAM env var",
 			Value:     &plugin.ScheduleTeam,
+		},
+		{
+			Path:      "visibility-teams",
+			Env:       "OPSGENIE_VISIBILITY_TEAMS",
+			Argument:  "visibility-teams",
+			Shorthand: "",
+			Default:   "",
+			Usage:     "The OpsGenie Visibility Responders Team, use default from OPSGENIE_VISIBILITY_TEAMS env var: sre,ops (splitted by commas)",
+			Value:     &plugin.VisibilityTeams,
 		},
 		{
 			Path:      "priority",
@@ -206,6 +219,33 @@ var (
 			Usage:     "Include the checks.hooks in details to send to OpsGenie",
 			Value:     &plugin.HooksDetails,
 		},
+		{
+			Path:      "tagTemplate",
+			Env:       "",
+			Argument:  "tagTemplate",
+			Shorthand: "",
+			Default:   []string{"{{.Entity.Name}}", "{{.Check.Name}}", "{{.Entity.Namespace}}", "{{.Entity.EntityClass}}"},
+			Usage:     "The template to assign for the incident in OpsGenie",
+			Value:     &plugin.TagsTemplates,
+		},
+		{
+			Path:      "remediation-events",
+			Env:       "",
+			Argument:  "remediation-events",
+			Shorthand: "",
+			Default:   false,
+			Usage:     "Enable Remediation Events to send check.output to opsgenie using alert alias from remediation-event-alias configuration",
+			Value:     &plugin.RemediationEvents,
+		},
+		{
+			Path:      "remediation-event-alias",
+			Env:       "",
+			Argument:  "remediation-event-alias",
+			Shorthand: "",
+			Default:   "",
+			Usage:     "Replace opsgenie alias with this value and add only output as node in opsgenie. Should be used with auto remediation checks",
+			Value:     &plugin.RemediationEventAlias,
+		},
 	}
 )
 
@@ -266,7 +306,14 @@ func parseEventKeyTags(event *types.Event) (title string, alias string, tags []s
 	if err != nil {
 		return "", "", []string{}
 	}
-	tags = append(tags, event.Entity.Name, event.Check.Name, event.Entity.Namespace, event.Entity.EntityClass)
+	// tags = append(tags, event.Entity.Name, event.Check.Name, event.Entity.Namespace, event.Entity.EntityClass)
+	for _, v := range plugin.TagsTemplates {
+		tag, err := templates.EvalTemplate("tags", v, event)
+		if err != nil {
+			return "", "", []string{}
+		}
+		tags = append(tags, tag)
+	}
 	if plugin.TitlePrettify {
 		newTitle := titlePrettify(title)
 		return trim(newTitle, plugin.MessageLimit), alias, tags
@@ -367,10 +414,15 @@ func parseDetails(event *types.Event) map[string]string {
 	}
 
 	if plugin.SensuDashboard != "disabled" {
-		details["sensuDashboard"] = fmt.Sprintf("source: %s/%s/events/%s/%s \n", plugin.SensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
+		details["sensuDashboard"] = fmt.Sprintf("source: %s \n", sensuDashboard(event.Entity.Namespace, event.Entity.Name, event.Check.Name))
 	}
 
 	return details
+}
+
+// sensuDashboard
+func sensuDashboard(namespace, entity, check string) string {
+	return fmt.Sprintf("%s/%s/events/%s/%s", plugin.SensuDashboard, namespace, entity, check)
 }
 
 // switchOpsgenieRegion func
@@ -400,8 +452,22 @@ func executeHandler(event *types.Event) error {
 	if event.Check.Status != 0 {
 		return createIncident(alertClient, event)
 	}
+
+	// if RemediationEvents true
+	if plugin.RemediationEvents && event.Check.Status == 0 {
+		hasAlert, _ := getAlert(alertClient, plugin.RemediationEventAlias)
+		details := make(map[string]string)
+		if plugin.SensuDashboard != "disabled" {
+			name := fmt.Sprintf("remediation_%s_source", event.Check.Name)
+			details[name] = sensuDashboard(event.Entity.Namespace, event.Entity.Name, event.Check.Name)
+		}
+		notes := fmt.Sprintf("%s ", event.Check.Output)
+		return updateAlert(alertClient, notes, hasAlert, details)
+	}
+
 	// check if event has a alert
-	hasAlert, _ := getAlert(alertClient, event)
+	_, alias, _ := parseEventKeyTags(event)
+	hasAlert, _ := getAlert(alertClient, alias)
 
 	// close incident if status == 0
 	if hasAlert != notFound && event.Check.Status == 0 {
@@ -424,26 +490,8 @@ func createIncident(alertClient *alert.Client, event *types.Event) error {
 			return err
 		}
 	}
-
-	teams := []alert.Responder{}
-	if plugin.EscalationTeam != "" {
-		escalation := []alert.Responder{
-			{Type: alert.EscalationResponder, Name: plugin.EscalationTeam},
-		}
-		teams = append(teams, escalation...)
-	}
-	if plugin.ScheduleTeam != "" {
-		schedule := []alert.Responder{
-			{Type: alert.ScheduleResponder, Name: plugin.ScheduleTeam},
-		}
-		teams = append(teams, schedule...)
-	}
-	if plugin.Team != "" {
-		team := []alert.Responder{
-			{Type: alert.TeamResponder, Name: plugin.Team},
-		}
-		teams = append(teams, team...)
-	}
+	teams := respondersTeam()
+	visibilityTeams := visibilityTeams()
 
 	title, alias, tags := parseEventKeyTags(event)
 
@@ -456,6 +504,7 @@ func createIncident(alertClient *alert.Client, event *types.Event) error {
 		Alias:       alias,
 		Description: parseDescription(event),
 		Responders:  teams,
+		VisibleTo:   visibilityTeams,
 		Actions:     actions,
 		Tags:        tags,
 		Details:     parseDetails(event),
@@ -472,9 +521,54 @@ func createIncident(alertClient *alert.Client, event *types.Event) error {
 	return nil
 }
 
+func respondersTeam() []alert.Responder {
+	local := []alert.Responder{}
+	if plugin.EscalationTeam != "" {
+		escalation := []alert.Responder{
+			{Type: alert.EscalationResponder, Name: plugin.EscalationTeam},
+		}
+		local = append(local, escalation...)
+	}
+	if plugin.ScheduleTeam != "" {
+		schedule := []alert.Responder{
+			{Type: alert.ScheduleResponder, Name: plugin.ScheduleTeam},
+		}
+		local = append(local, schedule...)
+	}
+	if plugin.Team != "" {
+		team := []alert.Responder{
+			{Type: alert.TeamResponder, Name: plugin.Team},
+		}
+		local = append(local, team...)
+	}
+	return local
+}
+
+func visibilityTeams() []alert.Responder {
+	local := []alert.Responder{}
+	var teamsList []string
+	if plugin.VisibilityTeams != "" {
+		if strings.Contains(plugin.VisibilityTeams, ",") {
+			teamsList = strings.Split(plugin.VisibilityTeams, ",")
+		}
+		if len(teamsList) == 0 {
+			teamsList = []string{plugin.VisibilityTeams}
+		}
+		for _, v := range teamsList {
+			if v != "" {
+				team := []alert.Responder{
+					{Type: alert.TeamResponder, Name: v},
+				}
+				local = append(local, team...)
+			}
+		}
+	}
+	return local
+}
+
 // getAlert func get a alert using an alias.
-func getAlert(alertClient *alert.Client, event *types.Event) (string, error) {
-	_, title, _ := parseEventKeyTags(event)
+func getAlert(alertClient *alert.Client, title string) (string, error) {
+	// _, title, _ := parseEventKeyTags(event)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	fmt.Printf("Checking for alert %s \n", title)
@@ -493,11 +587,12 @@ func getAlert(alertClient *alert.Client, event *types.Event) (string, error) {
 func closeAlert(alertClient *alert.Client, event *types.Event, alertid string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	notes := fmt.Sprintf("Closed Automatically\n %s", event.Check.Output)
 	closeResult, err := alertClient.Close(ctx, &alert.CloseAlertRequest{
 		IdentifierType:  alert.ALERTID,
 		IdentifierValue: alertid,
 		Source:          source,
-		Note:            "Closed Automatically",
+		Note:            notes,
 	})
 	if err != nil {
 		fmt.Printf("[ERROR] Not Closed: %s \n", err)
@@ -531,4 +626,34 @@ func titlePrettify(s string) string {
 	title = strings.ReplaceAll(title, "/", " ")
 	title = strings.Title(title)
 	return title
+}
+
+// updateAlert func update alert with status == 0
+func updateAlert(alertClient *alert.Client, notes string, alertid string, details map[string]string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	updateAlert := new(alert.AsyncAlertResult)
+	var err error
+	if len(details) != 0 {
+		updateAlert, err = alertClient.AddDetails(ctx, &alert.AddDetailsRequest{
+			IdentifierType:  alert.ALERTID,
+			IdentifierValue: alertid,
+			Source:          source,
+			Note:            notes,
+			Details:         details,
+		})
+	} else {
+		updateAlert, err = alertClient.AddNote(ctx, &alert.AddNoteRequest{
+			IdentifierType:  alert.ALERTID,
+			IdentifierValue: alertid,
+			Source:          source,
+			Note:            notes,
+		})
+	}
+	if err != nil {
+		fmt.Printf("Not updated: %s \n", err)
+	}
+	fmt.Printf("RequestID %s to update %s \n", alertid, updateAlert.RequestId)
+
+	return nil
 }
