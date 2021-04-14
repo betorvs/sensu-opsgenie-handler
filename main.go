@@ -491,6 +491,7 @@ func executeHandler(event *types.Event) error {
 		if err != nil {
 			return err
 		}
+		// match entity/check names
 		entity_check := fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name)
 		if heartbeats[entity_check] != "" {
 			fmt.Printf("Pinging heartbeat %s \n", heartbeats[entity_check])
@@ -499,9 +500,29 @@ func executeHandler(event *types.Event) error {
 				return errPing
 			}
 		}
+		// use any check
+		entity_all := fmt.Sprintf("%s/all", event.Entity.Name)
+		if heartbeats[entity_all] != "" {
+			// ping all alerts
+			fmt.Printf("Pinging heartbeat %s with entity/all defined\n", heartbeats[entity_all])
+			errPing := pingHeartbeat(heartbeats[entity_all])
+			if errPing != nil {
+				return errPing
+			}
+		}
+		// use any entity
+		all_check := fmt.Sprintf("all/%s", event.Check.Name)
+		if heartbeats[all_check] != "" {
+			// ping all alerts
+			fmt.Printf("Pinging heartbeat %s with all/check defined\n", heartbeats[all_check])
+			errPing := pingHeartbeat(heartbeats[all_check])
+			if errPing != nil {
+				return errPing
+			}
+		}
 		if heartbeats["all"] != "" {
 			// ping all alerts
-			fmt.Printf("Pinging heartbeat %s without entity/check defined\n", heartbeats["all"])
+			fmt.Printf("Pinging heartbeat %s with all/all defined\n", heartbeats["all"])
 			errPing := pingHeartbeat(heartbeats["all"])
 			if errPing != nil {
 				return errPing

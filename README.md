@@ -293,6 +293,12 @@ spec:
   filters: null
 ```
 
+Using all with `--heartbeat-map`:
+```
+--hearbeat-map webserver01/check-nginx=heartbeat_webserver01_nginx,webserver01/all=heartbeat_webserver01_all,all/check-nginx=heartbeat_all_nginx
+```
+In order: should match entity/check; should match entity with any check; should match any entity with check-nginx.
+
 
 ## Contributing
 
