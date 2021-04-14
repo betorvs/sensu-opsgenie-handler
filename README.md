@@ -2,6 +2,22 @@
 ![Go Test](https://github.com/betorvs/sensu-opsgenie-handler/workflows/Go%20Test/badge.svg)
 [![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/betorvs/sensu-opsgenie-handler)
 
+## Table of Contents
+- [Overview](#overview)
+- [Configuration](#configuration)
+- [Usage examples](#usage-examples)
+- [Others Configurations](#others-configurations)
+  - [To use Opsgenie Priority from Entity or Check](#to-use-opsgenie-priority-from-entity-or-check)
+  - [Argument Annotations](#argument-annotations)
+  - [Asset registration](#asset-registration)
+- [Installation from source](#installation-from-source)
+- [Additional notes](#additional-notes)
+  - [Option remediation handler](#option-remediation-handler)
+  - [Option keepalived handler](#option-keepalived-handler)
+- [Contributing](#contributing)
+
+## Overview
+
 The Sensu Go OpsGenie Handler is a [Sensu Event Handler][3] which manages
 [OpsGenie][2] incidents, for alerting operators. With this handler,
 [Sensu][1] can trigger OpsGenie incidents.
@@ -10,15 +26,6 @@ This handler was inspired by [pagerduty plugin][6].
 
 After version 1.0.0 we changed opsgenie [sdk][7] to [sdk-v2][8].
 
-## Installation
-
-Download the latest version of the sensu-opsgenie-handler from [releases][4],
-or create an executable script from this source.
-
-From the local path of the sensu-opsgenie-handler repository:
-```
-go build -o /usr/local/bin/sensu-opsgenie-handler main.go
-```
 
 ## Configuration
 
@@ -105,6 +112,8 @@ Flags:
   -d, --descriptionTemplate string       The template for the description to be sent (default "{{.Check.Output}}")
       --escalation-team string           The OpsGenie Escalation Responders Team, use default from OPSGENIE_ESCALATION_TEAM env var
   -F, --fullDetails                      Include the more details to send to OpsGenie like proxy_entity_name, occurrences and agent details arch and os
+      --hearbeat-map string              Map of entity/check to heartbeat name. E. entity/check=heartbeat_name,entity1/check1=heartbeat
+      --heartbeat                        Enable Heartbeat Events
   -h, --help                             help for sensu-opsgenie-handler
   -i, --includeEventInNote               Include the event JSON in the payload sent to OpsGenie
   -l, --messageLimit int                 The maximum length of the message field (default 130)
@@ -129,6 +138,8 @@ Use "sensu-opsgenie-handler [command] --help" for more information about a comma
 **Note:** Make sure to set the `OPSGENIE_AUTHTOKEN` environment variable for sensitive credentials in production to prevent leaking into system process table. Please remember command arguments can be viewed by unprivileged users using commands such as `ps` or `top`. The `--auth` argument is provided as an override primarily for testing purposes. 
 
 To configure OpsGenie Sensu Integration follow these first part in [OpsGenie Docs][5].
+
+## Others Configurations
 
 ### To use Opsgenie Priority from Entity or Check
 
@@ -179,7 +190,7 @@ metadata:
 ```
 
 
-### Asset creation
+### Asset registration
 
 The easiest way to get this handler added to your Sensu environment, is to add it as an asset from Bonsai:
 
@@ -189,7 +200,24 @@ sensuctl asset add betorvs/sensu-opsgenie-handler --rename sensu-opsgenie-handle
 
 See `sensuctl asset --help` for details on how to specify version.
 
+## Installation from source
+
+Download the latest version of the sensu-opsgenie-handler from [releases][4],
+or create an executable script from this source.
+
+From the local path of the sensu-opsgenie-handler repository:
+```
+go build -o /usr/local/bin/sensu-opsgenie-handler main.go
+```
+
+
 ## Additional notes
+
+Both options presented here changes how this handler works, only use this for specific cases and remember to not apply any filter, because in both cases, they will send only in case of status `!= 0`.
+
+### Option remediation handler
+
+Using this option we enable opsgenie handler to add extra properties in a previous alert created with remediation actions (checks). 
 
 Flags: `--remediation-events` and `--remediation-event-alias`. More info about [remediation][11].
 
@@ -241,6 +269,31 @@ spec:
 
 More ideas about remediation try this [plugin][12].
 
+### Option keepalived handler
+
+This option enable opsgenie plugin to send heatbeat pings instead creating new alerts. This options could fit in keepalive for important network assets or important integrations (like [alert manager plugin][14]).
+
+Flags `--heartbeat` and `--hearbeat-map` can map a entity/check to a [heartbeat][13] in opsgenie. 
+
+And Handler:
+```yml
+type: Handler
+api_version: core/v2
+metadata:
+  name: opsgenie_heartbeat
+  namespace: default
+spec:
+  type: pipe
+  command: sensu-opsgenie-handler --heartbeat --hearbeat-map webserver01/check-nginx=heartbeat_webserver01_nginx
+  env_vars:
+  - OPSGENIE_REGION=us
+  timeout: 10
+  runtime_assets:
+  - betorvs/sensu-opsgenie-handler
+  filters: null
+```
+
+
 ## Contributing
 
 See https://github.com/sensu/sensu-go/blob/master/CONTRIBUTING.md
@@ -257,3 +310,5 @@ See https://github.com/sensu/sensu-go/blob/master/CONTRIBUTING.md
 [10]: https://docs.sensu.io/sensu-go/latest/guides/secrets-management/#use-env-for-secrets-management
 [11]: https://github.com/sensu/sensu-remediation-handler
 [12]: https://github.com/betorvs/sensu-dynamic-check-mutator
+[13]: https://docs.opsgenie.com/docs/heartbeat-api
+[14]: https://github.com/betorvs/sensu-alertmanager-events

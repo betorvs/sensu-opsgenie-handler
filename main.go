@@ -9,6 +9,7 @@ import (
 
 	"github.com/opsgenie/opsgenie-go-sdk-v2/alert"
 	"github.com/opsgenie/opsgenie-go-sdk-v2/client"
+	"github.com/opsgenie/opsgenie-go-sdk-v2/heartbeat"
 	"github.com/sensu-community/sensu-plugin-sdk/sensu"
 	"github.com/sensu-community/sensu-plugin-sdk/templates"
 
@@ -44,6 +45,8 @@ type Config struct {
 	TagsTemplates         []string
 	RemediationEvents     bool
 	RemediationEventAlias string
+	HeartbeatEvents       bool
+	HeartbeatMap          string
 }
 
 var (
@@ -245,6 +248,24 @@ var (
 			Default:   "",
 			Usage:     "Replace opsgenie alias with this value and add only output as node in opsgenie. Should be used with auto remediation checks",
 			Value:     &plugin.RemediationEventAlias,
+		},
+		{
+			Path:      "heartbeat",
+			Env:       "",
+			Argument:  "heartbeat",
+			Shorthand: "",
+			Default:   false,
+			Usage:     "Enable Heartbeat Events",
+			Value:     &plugin.HeartbeatEvents,
+		},
+		{
+			Path:      "hearbeat-map",
+			Env:       "",
+			Argument:  "hearbeat-map",
+			Shorthand: "",
+			Default:   "",
+			Usage:     "Map of entity/check to heartbeat name. E. entity/check=heartbeat_name,entity1/check1=heartbeat",
+			Value:     &plugin.HeartbeatMap,
 		},
 	}
 )
@@ -448,12 +469,12 @@ func executeHandler(event *types.Event) error {
 	if err != nil {
 		return fmt.Errorf("failed to create opsgenie client: %s", err)
 	}
-
+	// always create an alert in opsgenie if status != 0
 	if event.Check.Status != 0 {
 		return createIncident(alertClient, event)
 	}
 
-	// if RemediationEvents true
+	// if RemediationEvents true: change behaviour of opsgenie plugin
 	if plugin.RemediationEvents && event.Check.Status == 0 {
 		hasAlert, _ := getAlert(alertClient, plugin.RemediationEventAlias)
 		details := make(map[string]string)
@@ -463,6 +484,33 @@ func executeHandler(event *types.Event) error {
 		}
 		notes := fmt.Sprintf("%s ", event.Check.Output)
 		return updateAlert(alertClient, notes, hasAlert, details)
+	}
+	// if heartbeat true: match entity/check with heartbeat
+	if plugin.HeartbeatEvents && event.Check.Status == 0 && plugin.HeartbeatMap != "" {
+		heartbeats, err := parseHeartbeatMap(plugin.HeartbeatMap)
+		if err != nil {
+			return err
+		}
+		entity_check := fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name)
+		if heartbeats[entity_check] != "" {
+			fmt.Printf("Pinging heartbeat %s \n", heartbeats[entity_check])
+			errPing := pingHeartbeat(heartbeats[entity_check])
+			if errPing != nil {
+				return errPing
+			}
+		}
+		if heartbeats["all"] != "" {
+			// ping all alerts
+			fmt.Printf("Pinging heartbeat %s without entity/check defined\n", heartbeats["all"])
+			errPing := pingHeartbeat(heartbeats["all"])
+			if errPing != nil {
+				return errPing
+			}
+		}
+		if len(heartbeats) != 0 {
+			fmt.Println("Not pinging any heartbeat because entity/check defined do not match")
+		}
+		return nil
 	}
 
 	// check if event has a alert
@@ -659,4 +707,72 @@ func updateAlert(alertClient *alert.Client, notes string, alertid string, detail
 		fmt.Printf("RequestID %s to update %s \n", alertid, updateAlert.RequestId)
 	}
 	return nil
+}
+
+func pingHeartbeat(name string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	heartbeatClient, err := heartbeat.NewClient(&client.Config{
+		ApiKey:         plugin.AuthToken,
+		OpsGenieAPIURL: switchOpsgenieRegion(),
+	})
+	if err != nil {
+		return err
+	}
+
+	hearbeatResult, err := heartbeatClient.Ping(ctx, name)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Heartbeat %s was requested with %s and response time %v and message %s", name, hearbeatResult.RequestId, hearbeatResult.ResponseTime, hearbeatResult.Message)
+
+	return nil
+}
+
+func parseHeartbeatMap(s string) (map[string]string, error) {
+	// entity1/check1=heartbeat1,entity2/check2=heartbeat2
+	heartbeats := make(map[string]string)
+	temp := makeMap(s)
+	for k, v := range temp {
+		if strings.Contains(v, "/") {
+			return heartbeats, fmt.Errorf("hearbeat wrong format: entity/check=heartbeat_name")
+		}
+		if k != "" && v != "" {
+			key := k
+			if !strings.Contains(k, "/") {
+				key = "all"
+			}
+			heartbeats[key] = v
+		}
+	}
+	return heartbeats, nil
+}
+
+func makeMap(s string) map[string]string {
+	temp := make(map[string]string)
+	if strings.Contains(s, ",") {
+		splited := strings.Split(s, ",")
+		for _, v := range splited {
+			a, b := splitString(v, "=")
+			if a != "" && b != "" {
+				temp[a] = b
+			}
+		}
+	} else {
+		a, b := splitString(s, "=")
+		if a != "" && b != "" {
+			temp[a] = b
+		}
+	}
+	return temp
+}
+
+func splitString(s, div string) (string, string) {
+	if div != "" {
+		splited := strings.Split(s, div)
+		if len(splited) == 2 {
+			return splited[0], splited[1]
+		}
+	}
+	return "", ""
 }

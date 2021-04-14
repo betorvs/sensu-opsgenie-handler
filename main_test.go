@@ -176,3 +176,47 @@ func TestVisibilityTeams(t *testing.T) {
 	res1 := visibilityTeams()
 	assert.Equal(t, res1, test1)
 }
+
+func TestSplitString(t *testing.T) {
+	test1 := "key1=value1"
+	res1 := "key1"
+	res2 := "value1"
+	val1, val2 := splitString(test1, "=")
+	assert.Equal(t, res1, val1)
+	assert.Equal(t, res2, val2)
+	assert.NotEqual(t, res1, val2)
+}
+
+func TestMakeRewriteAnnotation(t *testing.T) {
+	test1 := "key1=value1,key2=value2"
+	res1 := map[string]string{"key1": "value1", "key2": "value2"}
+	val1 := makeMap(test1)
+	assert.Equal(t, res1, val1)
+	test2 := "key1=value1,key2/subkey2=value2"
+	res2 := map[string]string{"key1": "value1", "key2/subkey2": "value2"}
+	val2 := makeMap(test2)
+	assert.Equal(t, res2, val2)
+	test3 := "key1=value1,key2=value2,"
+	res3 := map[string]string{"key1": "value1", "key2": "value2"}
+	val3 := makeMap(test3)
+	assert.Equal(t, res3, val3)
+}
+
+func TestParseHeartbeatMap(t *testing.T) {
+	test1 := "entity1/check1=heartbeat1,entity2/check2=heartbeat2"
+	expected1 := map[string]string{"entity1/check1": "heartbeat1", "entity2/check2": "heartbeat2"}
+	res1, err1 := parseHeartbeatMap(test1)
+	assert.Equal(t, expected1, res1)
+	assert.NoError(t, err1)
+
+	test2 := "entity1/check1=heartbeat1,"
+	expected2 := map[string]string{"entity1/check1": "heartbeat1"}
+	res2, err2 := parseHeartbeatMap(test2)
+	assert.Equal(t, expected2, res2)
+	assert.NoError(t, err2)
+
+	test3 := "heartbeat1=entity1/check1,"
+	_, err3 := parseHeartbeatMap(test3)
+	assert.Error(t, err3)
+
+}

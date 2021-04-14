@@ -7,6 +7,13 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [1.0.4] - 2021-04-14
+### Added
+- flags `--heartbeat` and `--hearbeat-map` to enable this handler to send an heartbeat request to opsgenie instead opening an alert. This can be used as keepalived handler or just to check if one integration is working fine. 
+
+### Changed
+- Update Readme
+
 ## [1.0.3] - 2021-04-01
 ### Added
 - flag `--tagTemplate` based on fork from [nixwiz](https://github.com/nixwiz/sensu-opsgenie-handler/commit/73208fff8c51234814758e8aafed114751daeff9). Remove short option due conflict with titlePrettify flag.
