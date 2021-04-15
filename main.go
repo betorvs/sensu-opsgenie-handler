@@ -485,52 +485,17 @@ func executeHandler(event *types.Event) error {
 		notes := fmt.Sprintf("%s ", event.Check.Output)
 		return updateAlert(alertClient, notes, hasAlert, details)
 	}
+	if plugin.RemediationEvents && event.Check.Status != 0 {
+		fmt.Printf("not sending alert because --remediation-events is enabled %s/%s", event.Entity.Name, event.Check.Name)
+		return nil
+	}
+
 	// if heartbeat true: match entity/check with heartbeat
 	if plugin.HeartbeatEvents && event.Check.Status == 0 && plugin.HeartbeatMap != "" {
-		heartbeats, err := parseHeartbeatMap(plugin.HeartbeatMap)
-		if err != nil {
-			return err
-		}
-		// match entity/check names
-		entity_check := fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name)
-		if heartbeats[entity_check] != "" {
-			fmt.Printf("Pinging heartbeat %s \n", heartbeats[entity_check])
-			errPing := pingHeartbeat(heartbeats[entity_check])
-			if errPing != nil {
-				return errPing
-			}
-		}
-		// use any check
-		entity_all := fmt.Sprintf("%s/all", event.Entity.Name)
-		if heartbeats[entity_all] != "" {
-			// ping all alerts
-			fmt.Printf("Pinging heartbeat %s with entity/all defined\n", heartbeats[entity_all])
-			errPing := pingHeartbeat(heartbeats[entity_all])
-			if errPing != nil {
-				return errPing
-			}
-		}
-		// use any entity
-		all_check := fmt.Sprintf("all/%s", event.Check.Name)
-		if heartbeats[all_check] != "" {
-			// ping all alerts
-			fmt.Printf("Pinging heartbeat %s with all/check defined\n", heartbeats[all_check])
-			errPing := pingHeartbeat(heartbeats[all_check])
-			if errPing != nil {
-				return errPing
-			}
-		}
-		if heartbeats["all"] != "" {
-			// ping all alerts
-			fmt.Printf("Pinging heartbeat %s with all/all defined\n", heartbeats["all"])
-			errPing := pingHeartbeat(heartbeats["all"])
-			if errPing != nil {
-				return errPing
-			}
-		}
-		if len(heartbeats) != 0 {
-			fmt.Println("Not pinging any heartbeat because entity/check defined do not match")
-		}
+		return heartbeatEvent(event)
+	}
+	if plugin.HeartbeatEvents && event.Check.Status != 0 {
+		fmt.Printf("not sending alert because --heartbeat is enabled %s/%s", event.Entity.Name, event.Check.Name)
 		return nil
 	}
 
@@ -543,6 +508,58 @@ func executeHandler(event *types.Event) error {
 		return closeAlert(alertClient, event, hasAlert)
 	}
 
+	return nil
+}
+
+// handle with heartbeat option
+func heartbeatEvent(event *types.Event) error {
+	heartbeats, err := parseHeartbeatMap(plugin.HeartbeatMap)
+	if err != nil {
+		return err
+	}
+	// match entity/check names
+	entity_check := fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name)
+	if heartbeats[entity_check] != "" {
+		fmt.Printf("Pinging heartbeat %s \n", heartbeats[entity_check])
+		errPing := pingHeartbeat(heartbeats[entity_check])
+		if errPing != nil {
+			return errPing
+		}
+	}
+	// use any check
+	entity_all := fmt.Sprintf("%s/all", event.Entity.Name)
+	if heartbeats[entity_all] != "" {
+		// ping all alerts
+		fmt.Printf("Pinging heartbeat %s with entity/all defined\n", heartbeats[entity_all])
+		errPing := pingHeartbeat(heartbeats[entity_all])
+		if errPing != nil {
+			return errPing
+		}
+		return nil
+	}
+	// use any entity
+	all_check := fmt.Sprintf("all/%s", event.Check.Name)
+	if heartbeats[all_check] != "" {
+		// ping all alerts
+		fmt.Printf("Pinging heartbeat %s with all/check defined\n", heartbeats[all_check])
+		errPing := pingHeartbeat(heartbeats[all_check])
+		if errPing != nil {
+			return errPing
+		}
+		return nil
+	}
+	if heartbeats["all"] != "" {
+		// ping all alerts
+		fmt.Printf("Pinging heartbeat %s with all/all defined\n", heartbeats["all"])
+		errPing := pingHeartbeat(heartbeats["all"])
+		if errPing != nil {
+			return errPing
+		}
+		return nil
+	}
+	if len(heartbeats) != 0 {
+		fmt.Println("Not pinging any heartbeat because entity/check defined do not match")
+	}
 	return nil
 }
 
