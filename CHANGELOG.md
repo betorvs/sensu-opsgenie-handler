@@ -14,6 +14,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Changed
 - Update Readme
 - Both flags `--heartbeat` and `--remediation-events` discard any event with status `!= 0`. 
+- update golang to 1.16
 
 ## [1.0.3] - 2021-04-01
 ### Added

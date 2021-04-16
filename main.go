@@ -282,6 +282,9 @@ func checkArgs(_ *types.Event) error {
 	// if len(plugin.Team) == 0 {
 	// 	return fmt.Errorf("team is empty")
 	// }
+	if plugin.HeartbeatEvents && plugin.RemediationEvents {
+		return fmt.Errorf("Cannot enable both options: --heartbeat and --remediation-events ")
+	}
 	return nil
 }
 
