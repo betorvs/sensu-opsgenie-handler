@@ -271,7 +271,7 @@ More ideas about remediation try this [plugin][12].
 
 ### Option keepalived handler
 
-This option enable opsgenie plugin to send heatbeat pings instead creating new alerts. This options could fit in keepalive for important network assets or important integrations (like [alert manager plugin][14]).
+This option enable opsgenie plugin to send heatbeat pings instead creating new alerts. This options could fit in keepalive for important network assets or important integrations (like [alert manager plugin][14]). If this check fails, and this plugin receives an event with status `!= 0` it discard this event. Opsgenie will alert you using heartbeat configuration. 
 
 Flags `--heartbeat` and `--hearbeat-map` can map a entity/check to a [heartbeat][13] in opsgenie. 
 

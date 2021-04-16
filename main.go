@@ -470,7 +470,7 @@ func executeHandler(event *types.Event) error {
 		return fmt.Errorf("failed to create opsgenie client: %s", err)
 	}
 	// always create an alert in opsgenie if status != 0
-	if event.Check.Status != 0 {
+	if event.Check.Status != 0 && !plugin.RemediationEvents && !plugin.HeartbeatEvents {
 		return createIncident(alertClient, event)
 	}
 
