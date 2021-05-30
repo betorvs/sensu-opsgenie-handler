@@ -220,3 +220,24 @@ func TestParseHeartbeatMap(t *testing.T) {
 	assert.Error(t, err3)
 
 }
+
+func TestSplitStringInSlice(t *testing.T) {
+	s1 := "test"
+	res1 := splitStringInSlice(s1)
+	expected1 := []string{"test"}
+	assert.Equal(t, expected1, res1)
+	s2 := "test,"
+	res2 := splitStringInSlice(s2)
+	expected2 := []string{"test"}
+	assert.Equal(t, expected2, res2)
+	s3 := "test,test1"
+	res3 := splitStringInSlice(s3)
+	expected3 := []string{"test", "test1"}
+	assert.Equal(t, expected3, res3)
+	s4 := ","
+	res4 := splitStringInSlice(s4)
+	var expected4 []string
+	expected5 := 0
+	assert.Equal(t, expected4, res4)
+	assert.Equal(t, expected5, len(res4))
+}

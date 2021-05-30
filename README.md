@@ -110,7 +110,7 @@ Flags:
   -a, --auth string                      The OpsGenie API authentication token, use default from OPSGENIE_AUTHTOKEN env var
   -L, --descriptionLimit int             The maximum length of the description field (default 15000)
   -d, --descriptionTemplate string       The template for the description to be sent (default "{{.Check.Output}}")
-      --escalation-team string           The OpsGenie Escalation Responders Team, use default from OPSGENIE_ESCALATION_TEAM env var
+      --escalation-team string           The OpsGenie Escalation Responders Team, use default from OPSGENIE_ESCALATION_TEAM env var: sre,ops (splitted by commas)
   -F, --fullDetails                      Include the more details to send to OpsGenie like proxy_entity_name, occurrences and agent details arch and os
       --hearbeat-map string              Map of entity/check to heartbeat name. E. entity/check=heartbeat_name,entity1/check1=heartbeat
       --heartbeat                        Enable Heartbeat Events
@@ -122,10 +122,10 @@ Flags:
   -r, --region string                    The OpsGenie API Region (us or eu), use default from OPSGENIE_REGION env var (default "us")
       --remediation-event-alias string   Replace opsgenie alias with this value and add only output as node in opsgenie. Should be used with auto remediation checks
       --remediation-events               Enable Remediation Events to send check.output to opsgenie using alert alias from remediation-event-alias configuration
-      --schedule-team string             The OpsGenie Schedule Responders Team, use default from OPSGENIE_SCHEDULE_TEAM env var
+      --schedule-team string             The OpsGenie Schedule Responders Team, use default from OPSGENIE_SCHEDULE_TEAM env var: sre,ops (splitted by commas)
   -s, --sensuDashboard string            The OpsGenie Handler will use it to create a source Sensu Dashboard URL. Use OPSGENIE_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n (default "disabled")
       --tagTemplate strings              The template to assign for the incident in OpsGenie (default [{{.Entity.Name}},{{.Check.Name}},{{.Entity.Namespace}},{{.Entity.EntityClass}}])
-  -t, --team string                      The OpsGenie Team, use default from OPSGENIE_TEAM env var
+  -t, --team string                      The OpsGenie Team, use default from OPSGENIE_TEAM env var: sre,ops (splitted by commas)
   -T, --titlePrettify                    Remove all -, /, \ and apply strings.Title in message title
       --visibility-teams string          The OpsGenie Visibility Responders Team, use default from OPSGENIE_VISIBILITY_TEAMS env var: sre,ops (splitted by commas)
   -w, --withAnnotations                  Include the event.metadata.Annotations in details to send to OpsGenie

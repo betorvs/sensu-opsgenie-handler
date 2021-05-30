@@ -84,7 +84,7 @@ var (
 			Argument:  "team",
 			Shorthand: "t",
 			Default:   "",
-			Usage:     "The OpsGenie Team, use default from OPSGENIE_TEAM env var",
+			Usage:     "The OpsGenie Team, use default from OPSGENIE_TEAM env var: sre,ops (splitted by commas)",
 			Value:     &plugin.Team,
 		},
 		{
@@ -93,7 +93,7 @@ var (
 			Argument:  "escalation-team",
 			Shorthand: "",
 			Default:   "",
-			Usage:     "The OpsGenie Escalation Responders Team, use default from OPSGENIE_ESCALATION_TEAM env var",
+			Usage:     "The OpsGenie Escalation Responders Team, use default from OPSGENIE_ESCALATION_TEAM env var: sre,ops (splitted by commas)",
 			Value:     &plugin.EscalationTeam,
 		},
 		{
@@ -102,7 +102,7 @@ var (
 			Argument:  "schedule-team",
 			Shorthand: "",
 			Default:   "",
-			Usage:     "The OpsGenie Schedule Responders Team, use default from OPSGENIE_SCHEDULE_TEAM env var",
+			Usage:     "The OpsGenie Schedule Responders Team, use default from OPSGENIE_SCHEDULE_TEAM env var: sre,ops (splitted by commas)",
 			Value:     &plugin.ScheduleTeam,
 		},
 		{
@@ -613,36 +613,59 @@ func createIncident(alertClient *alert.Client, event *types.Event) error {
 func respondersTeam() []alert.Responder {
 	local := []alert.Responder{}
 	if plugin.EscalationTeam != "" {
-		escalation := []alert.Responder{
-			{Type: alert.EscalationResponder, Name: plugin.EscalationTeam},
+		teamsList := splitStringInSlice(plugin.EscalationTeam)
+		if len(teamsList) != 0 {
+			for _, v := range teamsList {
+				if v != "" {
+					team := []alert.Responder{
+						{Type: alert.EscalationResponder, Name: v},
+					}
+					local = append(local, team...)
+				}
+			}
 		}
-		local = append(local, escalation...)
+		// escalation := []alert.Responder{
+		// 	{Type: alert.EscalationResponder, Name: plugin.EscalationTeam},
+		// }
+		// local = append(local, escalation...)
 	}
 	if plugin.ScheduleTeam != "" {
-		schedule := []alert.Responder{
-			{Type: alert.ScheduleResponder, Name: plugin.ScheduleTeam},
+		teamsList := splitStringInSlice(plugin.ScheduleTeam)
+		if len(teamsList) != 0 {
+			for _, v := range teamsList {
+				if v != "" {
+					team := []alert.Responder{
+						{Type: alert.ScheduleResponder, Name: v},
+					}
+					local = append(local, team...)
+				}
+			}
 		}
-		local = append(local, schedule...)
+		// schedule := []alert.Responder{
+		// 	{Type: alert.ScheduleResponder, Name: plugin.ScheduleTeam},
+		// }
+		// local = append(local, schedule...)
 	}
 	if plugin.Team != "" {
-		team := []alert.Responder{
-			{Type: alert.TeamResponder, Name: plugin.Team},
+		teamsList := splitStringInSlice(plugin.Team)
+		if len(teamsList) != 0 {
+			for _, v := range teamsList {
+				if v != "" {
+					team := []alert.Responder{
+						{Type: alert.TeamResponder, Name: v},
+					}
+					local = append(local, team...)
+				}
+			}
 		}
-		local = append(local, team...)
 	}
 	return local
 }
 
 func visibilityTeams() []alert.Responder {
 	local := []alert.Responder{}
-	var teamsList []string
-	if plugin.VisibilityTeams != "" {
-		if strings.Contains(plugin.VisibilityTeams, ",") {
-			teamsList = strings.Split(plugin.VisibilityTeams, ",")
-		}
-		if len(teamsList) == 0 {
-			teamsList = []string{plugin.VisibilityTeams}
-		}
+	teamsList := splitStringInSlice(plugin.VisibilityTeams)
+	if len(teamsList) != 0 {
 		for _, v := range teamsList {
 			if v != "" {
 				team := []alert.Responder{
@@ -816,4 +839,22 @@ func splitString(s, div string) (string, string) {
 		}
 	}
 	return "", ""
+}
+
+func splitStringInSlice(s string) (stringList []string) {
+	if strings.Contains(s, ",") {
+		if strings.Contains(s, ",") {
+			tmpList := strings.Split(s, ",")
+			if len(tmpList) != 0 {
+				for _, v := range tmpList {
+					if v != "" {
+						stringList = append(stringList, v)
+					}
+				}
+			}
+		}
+	} else {
+		stringList = []string{s}
+	}
+	return stringList
 }

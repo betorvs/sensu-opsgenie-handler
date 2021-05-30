@@ -7,6 +7,10 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [1.0.5] - 2021-05-30
+### Changed
+- flag `--team` and `--schedule-team` and `--escalation-team` now can be used with multiple values splited by comma. This limit still existing from Opsgenie documentation ` If the API Key belongs to a team integration, this field will be overwritten with the owner team. ` [opsgenie api docs](https://docs.opsgenie.com/docs/alert-api#create-alert) This [issue](https://github.com/opsgenie/opsgenie-go-sdk-v2/issues/81) is about how to handle with this.
+
 ## [1.0.4] - 2021-04-14
 ### Added
 - flags `--heartbeat` and `--hearbeat-map` to enable this handler to send an heartbeat request to opsgenie instead opening an alert. This can be used as keepalived handler or just to check if one integration is working fine. 
