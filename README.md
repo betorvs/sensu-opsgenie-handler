@@ -107,6 +107,7 @@ Available Commands:
 
 Flags:
       --addHooksToDetails                Include the checks.hooks in details to send to OpsGenie
+  -A, --aliasTemplate string             The template for the alias to be sent (default "{{.Entity.Name}}/{{.Check.Name}}")
   -a, --auth string                      The OpsGenie API authentication token, use default from OPSGENIE_AUTHTOKEN env var
   -L, --descriptionLimit int             The maximum length of the description field (default 15000)
   -d, --descriptionTemplate string       The template for the description to be sent (default "{{.Check.Output}}")

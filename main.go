@@ -32,6 +32,7 @@ type Config struct {
 	VisibilityTeams       string
 	Priority              string
 	SensuDashboard        string
+	AliasTemplate         string
 	MessageTemplate       string
 	MessageLimit          int
 	DescriptionTemplate   string
@@ -131,6 +132,15 @@ var (
 			Default:   "disabled",
 			Usage:     "The OpsGenie Handler will use it to create a source Sensu Dashboard URL. Use OPSGENIE_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n",
 			Value:     &plugin.SensuDashboard,
+		},
+		{
+			Path:      "aliasTemplate",
+			Env:       "OPSGENIE_ALIAS_TEMPLATE",
+			Argument:  "aliasTemplate",
+			Shorthand: "A",
+			Default:   "{{.Entity.Name}}/{{.Check.Name}}",
+			Usage:     "The template for the alias to be sent",
+			Value:     &plugin.AliasTemplate,
 		},
 		{
 			Path:      "messageTemplate",
@@ -325,7 +335,12 @@ func parseActions(event *types.Event) (output []string) {
 // second string contains Entity.Name/Check.Name to use in alias
 // []string contains Entity.Name Check.Name Entity.Namespace, event.Entity.EntityClass to use as tags in Opsgenie
 func parseEventKeyTags(event *types.Event) (title string, alias string, tags []string) {
-	alias = fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name)
+	alias, err1 := templates.EvalTemplate("title", plugin.AliasTemplate, event)
+	if err1 != nil {
+		return "", "", []string{}
+	}
+
+	// alias = fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name)
 	title, err := templates.EvalTemplate("title", plugin.MessageTemplate, event)
 	if err != nil {
 		return "", "", []string{}

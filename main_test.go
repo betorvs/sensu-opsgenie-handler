@@ -115,6 +115,7 @@ func TestParseEventKeyTags(t *testing.T) {
 	_, err := json.Marshal(event)
 	assert.NoError(t, err)
 	plugin.MessageTemplate = "{{.Entity.Name}}/{{.Check.Name}}"
+	plugin.AliasTemplate = "{{.Entity.Name}}/{{.Check.Name}}"
 	plugin.MessageLimit = 100
 	plugin.TagsTemplates = []string{"{{.Entity.Name}}", "{{.Check.Name}}", "{{.Entity.Namespace}}", "{{.Entity.EntityClass}}"}
 	title, alias, tags := parseEventKeyTags(event)
