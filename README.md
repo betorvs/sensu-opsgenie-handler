@@ -1,4 +1,7 @@
 # Sensu Go OpsGenie Handler
+
+Deprecated, please go to: https://github.com/sensu/sensu-opsgenie-handler
+
 ![Go Test](https://github.com/betorvs/sensu-opsgenie-handler/workflows/Go%20Test/badge.svg)
 [![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/betorvs/sensu-opsgenie-handler)
 
